@@ -4,10 +4,14 @@
   "version": "1.0",
   "description": "Works only on GitHub file pages",
   "permissions": ["activeTab", "scripting"],
-  "host_permissions": [
-    "https://github.com/*/*/blob/*"
-  ],
+  "host_permissions": ["https://github.com/*/*/blob/*"],
   "action": {
     "default_popup": "popup.html"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*/blob/*"],
+      "js": ["content.js"]
+    }
+  ]
 }

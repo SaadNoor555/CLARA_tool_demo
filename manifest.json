@@ -9,9 +9,10 @@
     "default_popup": "popup.html"
   },
   "content_scripts": [
-    {
-      "matches": ["https://github.com/*/*/blob/*"],
-      "js": ["content.js"]
-    }
-  ]
+  {
+    "matches": ["https://github.com/*/*/blob/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }
+]
 }

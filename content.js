@@ -127,6 +127,22 @@ function createPopupUI(text) {
   startAutoCloseTimer();
 }
 
+
+function onReady(callback) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', callback);
+  } else {
+    callback();
+  }
+}
+
+onReady(() => {
+	const selection = window.getSelection();
+	const selectedText = selection.toString().trim();
+	createPopupUI(selectedText || '(No text selected yet)');
+});
+
+
 document.addEventListener('mouseup', (event) => {
   setTimeout(() => {
     const target = event.target;

@@ -1,7 +1,19 @@
+let hfToken = null;
+
+// Load token on startup
+fetch(chrome.runtime.getURL("config.json"))
+  .then(response => response.json())
+  .then(config => {
+    hfToken = config.HF_TOKEN;
+    console.log("✅ Token loaded");
+  })
+  .catch(err => console.error("❌ Failed to load config.json:", err));
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "askDeepSeek") {
+    console.log("payload: ")
     console.log(message.payload);
-    const HF_TOKEN = "token"; // Replace this with your actual token
+    const HF_TOKEN = hfToken; // Replace this with your actual token
 
     fetch("https://router.huggingface.co/fireworks-ai/inference/v1/chat/completions", {
       method: "POST",

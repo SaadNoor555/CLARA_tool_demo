@@ -12,6 +12,12 @@
     "service_worker": "llm_handler.js",
     "type": "module"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["config.json"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
   {
     "matches": ["https://github.com/*/*/blob/*"],

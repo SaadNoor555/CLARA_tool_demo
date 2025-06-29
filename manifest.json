@@ -8,6 +8,10 @@
   "action": {
     "default_popup": "popup.html"
   },
+  "background": {
+    "service_worker": "llm_handler.js",
+    "type": "module"
+  },
   "content_scripts": [
   {
     "matches": ["https://github.com/*/*/blob/*"],

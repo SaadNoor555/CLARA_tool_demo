@@ -2,6 +2,22 @@ let selectionPopup = null;
 let lastSelectedText = '';
 let autoCloseTimer = null;
 
+function sendToDeepSeek(results, resultDiv, context = "code portion") {
+  const extracted = results;
+  const prompt = `Explain this ${context} briefly (within 100 words):\n` + extracted;
+
+  if (resultDiv) resultDiv.textContent = '⏳ Loading...';
+
+  chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
+    if (chrome.runtime.lastError) {
+      resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
+    } else {
+      resultDiv.textContent = response?.result || '❌ No response';
+    }
+  });
+}
+
+
 function removePopup() {
   if (selectionPopup) {
     selectionPopup.remove();
@@ -17,7 +33,7 @@ function startAutoCloseTimer() {
   if (autoCloseTimer) clearTimeout(autoCloseTimer);
   autoCloseTimer = setTimeout(() => {
     removePopup();
-  }, 10000); // 10 seconds
+  }, 5000000); // 10 seconds
 }
 
 function createPopupUI(text) {
@@ -87,7 +103,8 @@ function createPopupUI(text) {
 
   explainBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    textDiv.textContent = `You have selected this:\n${lastSelectedText}`;
+    // textDiv.textContent = `You have selected this:\n${lastSelectedText}`;
+    sendToDeepSeek(lastSelectedText, textDiv, "code portion");
     textDiv.style.display = 'block';
     startAutoCloseTimer();
   });
@@ -103,7 +120,7 @@ function createPopupUI(text) {
         textDiv.textContent = '❌ No elements with id "read-only-cursor-text-area" found.';
       } else {
         const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
-        textDiv.textContent = codeText || '(Empty content)';
+        sendToDeepSeek(codeText, textDiv, "code");
       }
       startAutoCloseTimer();
     } catch (err) {

@@ -1,17 +1,17 @@
-// document.getElementById('extractTextarea').addEventListener('click', async () => {
-//   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+function sendToDeepSeek(results, resultDiv, context = "code portion") {
+  const extracted = results?.[0]?.result ?? '';
+  const prompt = `Explain this ${context} briefly (within 100 words):\n` + extracted;
 
-//   chrome.scripting.executeScript({
-//     target: { tabId: tab.id },
-//     func: () => {
-//       const textarea = document.getElementById('read-only-cursor-text-area');
-//       return textarea ? textarea.value.trim() : '❌ Textarea not found.';
-//     }
-//   }, (results) => {
-//     document.getElementById('output').textContent = results?.[0]?.result ?? '❌ No result.';
-//   });
-// });
+  if (resultDiv) resultDiv.textContent = '⏳ Loading...';
 
+  chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
+    if (chrome.runtime.lastError) {
+      resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
+    } else {
+      resultDiv.textContent = response?.result || '❌ No response';
+    }
+  });
+}
 
 document.getElementById('extractTextarea').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -25,17 +25,7 @@ document.getElementById('extractTextarea').addEventListener('click', async () =>
   }
   , (results) => {
     const resultDiv = document.getElementById('output');
-    if (resultDiv) resultDiv.textContent = '⏳ Loading...';
-    console.log("going to llm");
-    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: "Explain this code:\n" + results?.[0]?.result || []}, (response) => {
-      console.log("hi llm");
-      if (chrome.runtime.lastError) {
-        resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
-      } else {
-        console.log(response.result);
-        resultDiv.textContent = response?.result || '❌ No response';
-      }
-    });
+    sendToDeepSeek(results, resultDiv, "code");
   });
 });
 
@@ -47,16 +37,6 @@ document.getElementById('showSelection').addEventListener('click', async () => {
     func: () => window.getSelection().toString().trim() || '❌ No text selected.'
   }, (results) => {
     const resultDiv = document.getElementById('output');
-    if (resultDiv) resultDiv.textContent = '⏳ Loading...';
-    console.log("going to llm");
-    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: "Explain this code portion:\n" + results?.[0]?.result || []}, (response) => {
-      console.log("hi llm");
-      if (chrome.runtime.lastError) {
-        resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
-      } else {
-        console.log(response.result);
-        resultDiv.textContent = response?.result || '❌ No response';
-      }
-    });
+    sendToDeepSeek(results, resultDiv, "code portion");
   });
 });

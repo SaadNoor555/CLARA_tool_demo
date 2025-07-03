@@ -54,13 +54,15 @@ function revealOutputCard(featureTitle) {
 function returnToHome() {
   document.getElementById('output-container')?.classList.add('hidden');
   document.getElementById('button-group')?.classList.remove('hidden');
-  document.getElementById('output-content').textContent = ''; // clear previous content
+  document.getElementById('output-content').textContent = '';
   document.getElementById('output-feature-title').textContent = '';
+  document.getElementById('chat-history').innerHTML = '';
+  document.getElementById('chat-input').value = '';
 }
 
+// Event bindings
 document.getElementById('backButton')?.addEventListener('click', returnToHome);
 
-// Event bindings
 document.getElementById('explainCode')?.addEventListener('click', () => {
   revealOutputCard('Explain Code');
   extractTextareas((results) => sendToDeepSeek(results, "code"));
@@ -104,5 +106,31 @@ document.getElementById('seeStats')?.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
       updateOutput(response?.result || '❌ No response');
     });
+  });
+});
+
+document.getElementById('chat-form')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const question = input.value.trim();
+  if (!question) return;
+
+  const history = document.getElementById('chat-history');
+  const userMessage = document.createElement('div');
+  userMessage.className = 'chat-message user';
+  userMessage.textContent = question;
+  history.appendChild(userMessage);
+
+  const aiMessage = document.createElement('div');
+  aiMessage.className = 'chat-message ai';
+  aiMessage.textContent = '⏳ Thinking...';
+  history.appendChild(aiMessage);
+
+  input.value = '';
+  history.scrollTop = history.scrollHeight;
+
+  chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: question }, (response) => {
+    aiMessage.textContent = response?.result || '❌ No response';
+    history.scrollTop = history.scrollHeight;
   });
 });

@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  width: 360px;
+  height: 600px;
+  margin: 0;
+  padding: 16px;
+  background: #ffffff;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 18px;
+  color: #222;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #2563eb;
+}
+
+#button-group {
+  transition: opacity 0.3s ease;
+}
+
+#button-group.hidden {
+  display: none;
+}
+
+#output-container {
+  margin-top: 20px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  animation: fadeIn 0.3s ease-in-out;
+  position: relative;
+  padding: 0; 
+}
+
+
+#output-feature-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+#output-container.hidden {
+  display: none;
+}
+
+#output-header {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 15px;
+  color: #000;
+}
+
+#output-content {
+  font-size: 14px;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+.output-inner {
+  padding: 48px 16px 16px 16px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#backButton {
+  position: fixed;           
+  top: 10px;
+  left: 10px;
+  width: 25%;                 
+  background-color: #3b82f6;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  z-index: 1000;              
+}
+
+#backButton:hover {
+  background-color: #0f2f59;
+}

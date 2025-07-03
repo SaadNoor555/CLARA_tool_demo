@@ -1,16 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body { font-family: sans-serif; width: 320px; padding: 10px; }
-    button { margin: 5px 0; width: 100%; padding: 8px; }
-    #output { white-space: pre-wrap; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; margin-top: 10px; max-height: 200px; overflow-y: auto; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <button id="extractTextarea">Extract Textarea</button>
-  <button id="showSelection">Show Selected Text</button>
-  <div id="output">(output will appear here)</div>
+  <h2>Text Extractor</h2>
+
+  <div id="button-group">
+    <button id="explainCode">Explain Code</button>
+    <button id="showSelection">Show Selected Text</button>
+    <button id="refactorCode">Refactor the Code</button>
+    <button id="identifyVulns">Identify Code Vulnerabilities</button>
+    <button id="seeStats">See Code Statistics</button>
+  </div>
+
+  <div id="output-container" class="hidden">
+    <button id="backButton">Back to Homepage</button>
+    <div class="output-inner">
+      <div id="output-feature-title">Feature</div>
+      <div id="output-header">Output</div>
+      <div id="output-content">
+        <p class="placeholder">Your Answer will be shown here...</p>
+      </div>
+    </div>
+  </div>
+
 
   <script src="popup.js"></script>
 </body>

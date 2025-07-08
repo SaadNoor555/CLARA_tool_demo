@@ -2,7 +2,6 @@ let selectionPopup = null;
 let lastSelectedText = '';
 let autoCloseTimer = null;
 
-
 function extractGitHubInfo(url) {
   const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
   if (match) {
@@ -30,12 +29,8 @@ function getRepoInfo() {
 
     if (scriptTag) {
       try {
-        // const jsonText = scriptTag.textContent.trim();
-        // const data = JSON.parse(jsonText);
         const currentUrl = window.location.href;
-        // console.log(extractGitHubInfo(currentUrl));
         var dfu = extractGitHubInfo(currentUrl);
-        // console.log(currentUrl);
         repo_obj['file name'] = dfu['filePath'];
         repo_obj['repo name'] = dfu['repo'];
         repo_obj['branch'] = dfu['branch'];
@@ -210,21 +205,59 @@ function createPopupUI(text) {
   startAutoCloseTimer();
 }
 
+const blobRegex = /^https:\/\/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/.+/;
+
 function initPopupWithSelection() {
   const selection = window.getSelection();
   const selectedText = selection.toString().trim();
-  createPopupUI(selectedText || '(No text selected yet)');
+  if (selectedText) {
+    createPopupUI(selectedText);
+  } else {
+    // Show popup even if no selection with default message
+    createPopupUI('(No text selected yet)');
+  }
 }
 
+
+// Track URL changes for PJAX navigation and call initPopupWithSelection
+let lastUrl = location.href;
+function onUrlChange() {
+  if (blobRegex.test(location.href)) {
+    initPopupWithSelection();
+  } else {
+    removePopup();
+  }
+}
+
+
+setInterval(() => {
+  if (location.href !== lastUrl) {
+    lastUrl = location.href;
+    onUrlChange();
+  }
+}, 500);
+
+
+
+
 function observePageChanges() {
+  // Observe for DOM changes that indicate PJAX navigation
   const targetNode = document.querySelector('#repo-content-pjax-container') || document.body;
   const observer = new MutationObserver(() => {
-    initPopupWithSelection();
+    // Check URL change on every DOM mutation
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      onUrlChange();
+    }
   });
   observer.observe(targetNode, { childList: true, subtree: true });
 }
 
-observePageChanges();
+// Initial run if on a blob page
+if (blobRegex.test(location.href)) {
+  initPopupWithSelection();
+  observePageChanges();
+}
 
 document.addEventListener('mouseup', (event) => {
   setTimeout(() => {

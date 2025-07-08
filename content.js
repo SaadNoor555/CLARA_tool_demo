@@ -6,68 +6,84 @@ let autoCloseTimer = null;
 function getRepoInfo() {
   console.log('in getRepoInfo');
 
-  const scriptTag = document.querySelector('script[type="application/json"][data-target="react-app.embeddedData"]');
+  return new Promise((resolve, reject) => {
+    const scriptTag = document.querySelector('script[type="application/json"][data-target="react-app.embeddedData"]');
 
-  var repo_obj = {
-    'file tree' : 'not available',
-    'file name' : 'not available',
-    'repo name' : 'not available',
-    'branch': 'not available',
-    'owner': 'not available'
-  }
-  
-  if (scriptTag) {
-    try {
-      const jsonText = scriptTag.textContent.trim();
-      const data = JSON.parse(jsonText);
-      console.log(data['payload']);
-      // console.log(data['payload']['path']);
-      // repo_obj['file tree'] = data['payload']['fileTree']
-      repo_obj['file name'] = data['payload']['path']
-      repo_obj['repo name'] = data['payload']['repo']['name']
-      repo_obj['branch'] = data['payload']['refInfo']['name']
-      repo_obj['owner'] = data['payload']['repo']['ownerLogin']
-      
-      var repo_req = {
-        'owner' : repo_obj['owner'],
-        'repo' : repo_obj['repo name'],
-        'branch' : repo_obj['branch']
+    var repo_obj = {
+      'file tree': 'XXX',
+      'file name': 'not available',
+      'repo name': 'not available',
+      'branch': 'not available',
+      'owner': 'not available'
+    };
+
+    if (scriptTag) {
+      try {
+        const jsonText = scriptTag.textContent.trim();
+        const data = JSON.parse(jsonText);
+        console.log(data['payload']);
+
+        repo_obj['file name'] = data['payload']['path'];
+        repo_obj['repo name'] = data['payload']['repo']['name'];
+        repo_obj['branch'] = data['payload']['refInfo']['name'];
+        repo_obj['owner'] = data['payload']['repo']['ownerLogin'];
+
+        const repo_req = {
+          'owner': repo_obj['owner'],
+          'repo': repo_obj['repo name'],
+          'branch': repo_obj['branch']
+        };
+
+        chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.log(chrome.runtime.lastError);
+            repo_obj['file tree'] = 'not available because of error';
+          } else {
+            repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
+          }
+          console.log(repo_obj);
+          resolve(repo_obj);
+        });
+
+      } catch (e) {
+        console.error('❌ Failed to parse JSON:', e);
+        reject(e);
       }
-
-      chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.log(chrome.runtime.lastError);
-          repo_obj['file tree'] = 'not available because of error'
-        } else {
-          repo_obj['file tree'] = response.result;
-        }
-      });
-    } catch (e) {
-      console.error('❌ Failed to parse JSON:', e);
+    } else {
+      console.log('❌ No matching script tag found.');
+      reject(new Error('No matching script tag found.'));
     }
-  } else {
-    console.log('❌ No matching script tag found.');
-  }
-  console.log(repo_obj);
-  return repo_obj
+  });
 }
 
 
-function sendToDeepSeek(results, resultDiv, context = "code portion") {
-  const extracted = results;
-  const repo_info = getRepoInfo();
-  const prompt = `Explain this ${context} briefly. Here additional information about the code for your convinience: ${JSON.stringify(repo_info)} (reply within 100 words):\n` + extracted;
 
+// function buildPrompt(repo_info, context) {
+
+// }
+
+async function sendToDeepSeek(results, resultDiv, context = "code portion") {
+  const extracted = results;
   if (resultDiv) resultDiv.textContent = '⏳ Loading...';
 
-  // chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
-  //   if (chrome.runtime.lastError) {
-  //     resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
-  //   } else {
-  //     resultDiv.textContent = response?.result || '❌ No response';
-  //   }
-  // });
+  try {
+    const repo_info = await getRepoInfo();  // Waits for the file tree to be fetched
+
+    const prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nNow explain the following code file: ${repo_info['file name']} in context of the project in 100-120 words-\n` + extracted;
+
+    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
+      if (chrome.runtime.lastError) {
+        resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
+      } else {
+        resultDiv.textContent = response?.result || '❌ No response';
+      }
+    });
+
+  } catch (err) {
+    resultDiv.textContent = `❌ Failed to extract repo info: ${err.message}`;
+  }
 }
+
 
 
 function removePopup() {

@@ -3,13 +3,24 @@ let lastSelectedText = '';
 let autoCloseTimer = null;
 
 
-function getRepoInfo() {
-  console.log('in getRepoInfo');
+function extractGitHubInfo(url) {
+  const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
+  if (match) {
+    const owner = match[1];      // e.g., SaadNoor555
+    const repo = match[2];       // e.g., ASE-Demo-Extension
+    const branch = match[3];     // e.g., gemini
+    const filePath = match[4];   // e.g., content.js or src/utils/file.js
+    return { owner, repo, branch, filePath };
+  } else {
+    return null;
+  }
+}
 
+function getRepoInfo() {
   return new Promise((resolve, reject) => {
     const scriptTag = document.querySelector('script[type="application/json"][data-target="react-app.embeddedData"]');
 
-    var repo_obj = {
+    const repo_obj = {
       'file tree': 'XXX',
       'file name': 'not available',
       'repo name': 'not available',
@@ -19,14 +30,16 @@ function getRepoInfo() {
 
     if (scriptTag) {
       try {
-        const jsonText = scriptTag.textContent.trim();
-        const data = JSON.parse(jsonText);
-        console.log(data['payload']);
-
-        repo_obj['file name'] = data['payload']['path'];
-        repo_obj['repo name'] = data['payload']['repo']['name'];
-        repo_obj['branch'] = data['payload']['refInfo']['name'];
-        repo_obj['owner'] = data['payload']['repo']['ownerLogin'];
+        // const jsonText = scriptTag.textContent.trim();
+        // const data = JSON.parse(jsonText);
+        const currentUrl = window.location.href;
+        // console.log(extractGitHubInfo(currentUrl));
+        var dfu = extractGitHubInfo(currentUrl);
+        // console.log(currentUrl);
+        repo_obj['file name'] = dfu['filePath'];
+        repo_obj['repo name'] = dfu['repo'];
+        repo_obj['branch'] = dfu['branch'];
+        repo_obj['owner'] = dfu['owner'];
 
         const repo_req = {
           'owner': repo_obj['owner'],
@@ -36,41 +49,37 @@ function getRepoInfo() {
 
         chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
           if (chrome.runtime.lastError) {
-            console.log(chrome.runtime.lastError);
             repo_obj['file tree'] = 'not available because of error';
           } else {
             repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
           }
-          console.log(repo_obj);
           resolve(repo_obj);
         });
-
       } catch (e) {
-        console.error('❌ Failed to parse JSON:', e);
         reject(e);
       }
     } else {
-      console.log('❌ No matching script tag found.');
       reject(new Error('No matching script tag found.'));
     }
   });
 }
 
+async function sendToDeepSeek(results, resultDiv, context = 1) {
+  const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
+  const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
 
-
-// function buildPrompt(repo_info, context) {
-
-// }
-
-async function sendToDeepSeek(results, resultDiv, context = "code portion") {
-  const extracted = results;
   if (resultDiv) resultDiv.textContent = '⏳ Loading...';
 
   try {
-    const repo_info = await getRepoInfo();  // Waits for the file tree to be fetched
+    const repo_info = await getRepoInfo();
+    let prompt = '';
 
-    const prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nNow explain the following code file: ${repo_info['file name']} in context of the project in 100-120 words-\n` + extracted;
-
+    if (context !== 1) {
+      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nNow explain the following code file called: ${repo_info['file name']} in context of the project in 100-120 words-\n` + codeText;
+    } else {
+      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nHere is the file: ${repo_info['file name']}, and it's contents:\n${codeText}\nGiven all these, explain the following code portion which was selected from the given file: ${results} in 100-120 words-\n`;
+    }
+    console.log(prompt);
     chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
       if (chrome.runtime.lastError) {
         resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
@@ -83,8 +92,6 @@ async function sendToDeepSeek(results, resultDiv, context = "code portion") {
     resultDiv.textContent = `❌ Failed to extract repo info: ${err.message}`;
   }
 }
-
-
 
 function removePopup() {
   if (selectionPopup) {
@@ -101,7 +108,7 @@ function startAutoCloseTimer() {
   if (autoCloseTimer) clearTimeout(autoCloseTimer);
   autoCloseTimer = setTimeout(() => {
     removePopup();
-  }, 5000000); // 10 seconds
+  }, 5000000);
 }
 
 function createPopupUI(text) {
@@ -126,7 +133,6 @@ function createPopupUI(text) {
     zIndex: 9999,
   });
 
-  // Explain Selection button
   const explainBtn = document.createElement('button');
   explainBtn.textContent = 'Explain Selection';
   Object.assign(explainBtn.style, {
@@ -141,7 +147,6 @@ function createPopupUI(text) {
     marginBottom: '10px',
   });
 
-  // Show Full Code button
   const showCodeBtn = document.createElement('button');
   showCodeBtn.textContent = 'Show Full Code';
   Object.assign(showCodeBtn.style, {
@@ -171,8 +176,7 @@ function createPopupUI(text) {
 
   explainBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    // textDiv.textContent = `You have selected this:\n${lastSelectedText}`;
-    sendToDeepSeek(lastSelectedText, textDiv, "code portion");
+    sendToDeepSeek(lastSelectedText, textDiv, 1);
     textDiv.style.display = 'block';
     startAutoCloseTimer();
   });
@@ -183,13 +187,7 @@ function createPopupUI(text) {
     textDiv.textContent = 'Loading...';
 
     try {
-      const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
-      if (textareas.length === 0) {
-        textDiv.textContent = '❌ No elements with id "read-only-cursor-text-area" found.';
-      } else {
-        const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
-        sendToDeepSeek(codeText, textDiv, "code");
-      }
+      sendToDeepSeek('', textDiv, 0);
       startAutoCloseTimer();
     } catch (err) {
       textDiv.textContent = '❌ Exception: ' + err.message;
@@ -212,21 +210,21 @@ function createPopupUI(text) {
   startAutoCloseTimer();
 }
 
-
-function onReady(callback) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', callback);
-  } else {
-    callback();
-  }
+function initPopupWithSelection() {
+  const selection = window.getSelection();
+  const selectedText = selection.toString().trim();
+  createPopupUI(selectedText || '(No text selected yet)');
 }
 
-onReady(() => {
-	const selection = window.getSelection();
-	const selectedText = selection.toString().trim();
-	createPopupUI(selectedText || '(No text selected yet)');
-});
+function observePageChanges() {
+  const targetNode = document.querySelector('#repo-content-pjax-container') || document.body;
+  const observer = new MutationObserver(() => {
+    initPopupWithSelection();
+  });
+  observer.observe(targetNode, { childList: true, subtree: true });
+}
 
+observePageChanges();
 
 document.addEventListener('mouseup', (event) => {
   setTimeout(() => {

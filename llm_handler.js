@@ -20,7 +20,7 @@ let gitToken = null;
 //       })
 
 
-const LLM_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+const LLM_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 
 // Load token on startup
 fetch(chrome.runtime.getURL("config.json"))
@@ -40,14 +40,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log(message.payload);
 
     var payload = {
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: message.payload || "What is the capital of France? answer to the point" },
-          ],
-        },
-      ],
+      contents: message.payload,
     };
 
 
@@ -63,7 +56,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })
       .then(response => response.json())
       .then(data => {
-        // console.log(data);
+        console.log(data);
         sendResponse({ success: true, result: data["candidates"][0]["content"]["parts"][0]["text"] });
       })
       .catch(error => {

@@ -3,7 +3,7 @@
   "name": "GitHub Blob Extractor",
   "version": "1.0",
   "description": "Works only on GitHub file pages",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://github.com/*"],
   "action": {
     "default_popup": "popup.html"

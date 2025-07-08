@@ -1,14 +1,15 @@
 let selectionPopup = null;
 let lastSelectedText = '';
 let autoCloseTimer = null;
+let chatHistory = [];
 
 function extractGitHubInfo(url) {
   const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
   if (match) {
-    const owner = match[1];      // e.g., SaadNoor555
-    const repo = match[2];       // e.g., ASE-Demo-Extension
-    const branch = match[3];     // e.g., gemini
-    const filePath = match[4];   // e.g., content.js or src/utils/file.js
+    const owner = match[1];
+    const repo = match[2];
+    const branch = match[3];
+    const filePath = match[4];
     return { owner, repo, branch, filePath };
   } else {
     return null;
@@ -30,7 +31,7 @@ function getRepoInfo() {
     if (scriptTag) {
       try {
         const currentUrl = window.location.href;
-        var dfu = extractGitHubInfo(currentUrl);
+        const dfu = extractGitHubInfo(currentUrl);
         repo_obj['file name'] = dfu['filePath'];
         repo_obj['repo name'] = dfu['repo'];
         repo_obj['branch'] = dfu['branch'];
@@ -59,32 +60,33 @@ function getRepoInfo() {
   });
 }
 
-async function sendToDeepSeek(results, resultDiv, context = 1) {
+async function sendToDeepSeek(results, context = 1) {
   const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
   const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
-
-  if (resultDiv) resultDiv.textContent = '⏳ Loading...';
-
   try {
     const repo_info = await getRepoInfo();
     let prompt = '';
 
     if (context !== 1) {
-      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nNow explain the following code file called: ${repo_info['file name']} in context of the project in 100-120 words-\n` + codeText;
+      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nNow explain the following code file called: ${repo_info['file name']} in context of the project in 100-120 words-\n${codeText}`;
     } else {
-      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nHere is the file: ${repo_info['file name']}, and it's contents:\n${codeText}\nGiven all these, explain the following code portion which was selected from the given file: ${results} in 100-120 words-\n`;
+      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nHere is the file: ${repo_info['file name']}, and it's contents:\n${codeText}\nGiven all these, explain the following code portion which was selected from the given file: ${results} in 100-120 words-`;
     }
-    console.log(prompt);
-    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
-      if (chrome.runtime.lastError) {
-        resultDiv.textContent = `❌ Error: ${chrome.runtime.lastError.message}`;
-      } else {
-        resultDiv.textContent = response?.result || '❌ No response';
-      }
+
+    chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
+        if (chrome.runtime.lastError) {
+          resolve(`❌ Error: ${chrome.runtime.lastError.message}`);
+        } else {
+          resolve(response?.result || '❌ No response');
+        }
+      });
     });
 
   } catch (err) {
-    resultDiv.textContent = `❌ Failed to extract repo info: ${err.message}`;
+    return `❌ Failed to extract repo info: ${err.message}`;
   }
 }
 
@@ -99,11 +101,96 @@ function removePopup() {
   }
 }
 
-function startAutoCloseTimer() {
-  if (autoCloseTimer) clearTimeout(autoCloseTimer);
-  autoCloseTimer = setTimeout(() => {
-    removePopup();
-  }, 5000000);
+function createResponsePage(responseText) {
+  selectionPopup.innerHTML = '';
+
+  const container = document.createElement('div');
+  Object.assign(container.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '400px',
+    width: '100%',
+    position: 'relative'
+  });
+
+  const backButton = document.createElement('button');
+  backButton.textContent = '← Back';
+  Object.assign(backButton.style, {
+    position: 'absolute',
+    top: '10px',
+    left: '10px',
+    background: '#eee',
+    border: 'none',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px'
+  });
+
+  backButton.addEventListener('click', () => {
+    createPopupUI(lastSelectedText);
+  });
+
+  const responseDiv = document.createElement('div');
+  Object.assign(responseDiv.style, {
+    flex: '1',
+    overflowY: 'auto',
+    marginTop: '40px',
+    marginBottom: '80px',
+    whiteSpace: 'pre-wrap',
+    padding: '5px'
+  });
+  responseDiv.textContent = responseText;
+  chatHistory.push({ role: 'model', parts: [{ text: responseText }] });
+
+  const inputBox = document.createElement('textarea');
+  Object.assign(inputBox.style, {
+    width: 'calc(100% - 20px)',
+    padding: '6px',
+    borderRadius: '6px',
+    border: '1px solid #ccc',
+    resize: 'vertical',
+    minHeight: '50px',
+    position: 'absolute',
+    bottom: '40px',
+    left: '10px',
+  });
+  inputBox.placeholder = 'Ask a follow-up...';
+
+  const followUpBtn = document.createElement('button');
+  followUpBtn.textContent = 'Submit Follow-up';
+  Object.assign(followUpBtn.style, {
+    width: 'calc(100% - 20px)',
+    padding: '8px',
+    background: '#444',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    position: 'absolute',
+    bottom: '10px',
+    left: '10px',
+    cursor: 'pointer',
+    fontSize: '13px'
+  });
+
+  followUpBtn.addEventListener('click', () => {
+    const followUpText = inputBox.value.trim();
+    if (followUpText) {
+      responseDiv.textContent = '⏳ Loading...';
+      chatHistory.push({ role: 'user', parts: [{ text: followUpText }] });
+      console.log(chatHistory);
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
+        responseDiv.textContent = response?.result || '❌ No response';
+        chatHistory.push({ role: 'model', parts: [{ text: response?.result || 'sorry cannot answer right now' }] });
+      });
+    }
+  });
+
+  container.appendChild(backButton);
+  container.appendChild(responseDiv);
+  container.appendChild(inputBox);
+  container.appendChild(followUpBtn);
+  selectionPopup.appendChild(container);
 }
 
 function createPopupUI(text) {
@@ -112,7 +199,6 @@ function createPopupUI(text) {
 
   selectionPopup = document.createElement('div');
   selectionPopup.classList.add('custom-selection-popup');
-
   Object.assign(selectionPopup.style, {
     position: 'fixed',
     top: '20px',
@@ -124,12 +210,14 @@ function createPopupUI(text) {
     padding: '10px',
     fontSize: '13px',
     width: '320px',
+    height: '400px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
     zIndex: 9999,
+    overflow: 'hidden'
   });
 
   const explainBtn = document.createElement('button');
-  explainBtn.textContent = 'Explain Selection';
+  explainBtn.textContent = 'Explain Selected Code';
   Object.assign(explainBtn.style, {
     width: '100%',
     padding: '8px',
@@ -139,11 +227,11 @@ function createPopupUI(text) {
     borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '13px',
-    marginBottom: '10px',
+    marginBottom: '10px'
   });
 
   const showCodeBtn = document.createElement('button');
-  showCodeBtn.textContent = 'Show Full Code';
+  showCodeBtn.textContent = 'Explain Full Code';
   Object.assign(showCodeBtn.style, {
     width: '100%',
     padding: '8px',
@@ -153,82 +241,36 @@ function createPopupUI(text) {
     borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '13px',
-    marginBottom: '10px',
+    marginBottom: '10px'
   });
 
-  const textDiv = document.createElement('div');
-  Object.assign(textDiv.style, {
-    whiteSpace: 'pre-wrap',
-    display: 'none',
-    background: '#fff',
-    border: '1px solid #ddd',
-    padding: '8px',
-    borderRadius: '6px',
-    maxHeight: '200px',
-    overflowY: 'auto',
-    fontFamily: 'monospace',
-  });
-
-  explainBtn.addEventListener('click', (e) => {
+  explainBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
-    sendToDeepSeek(lastSelectedText, textDiv, 1);
-    textDiv.style.display = 'block';
-    startAutoCloseTimer();
+    const resultText = await sendToDeepSeek(lastSelectedText, 1);
+    createResponsePage(resultText);
   });
 
-  showCodeBtn.addEventListener('click', (e) => {
+  showCodeBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
-    textDiv.style.display = 'block';
-    textDiv.textContent = 'Loading...';
-
-    try {
-      sendToDeepSeek('', textDiv, 0);
-      startAutoCloseTimer();
-    } catch (err) {
-      textDiv.textContent = '❌ Exception: ' + err.message;
-    }
-  });
-
-  selectionPopup.addEventListener('mouseenter', () => {
-    clearTimeout(autoCloseTimer);
-  });
-
-  selectionPopup.addEventListener('mouseleave', () => {
-    startAutoCloseTimer();
+    const resultText = await sendToDeepSeek('', 0);
+    createResponsePage(resultText);
   });
 
   selectionPopup.appendChild(explainBtn);
   selectionPopup.appendChild(showCodeBtn);
-  selectionPopup.appendChild(textDiv);
   document.body.appendChild(selectionPopup);
-
-  startAutoCloseTimer();
 }
 
 const blobRegex = /^https:\/\/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/.+/;
 
-function initPopupWithSelection() {
-  const selection = window.getSelection();
-  const selectedText = selection.toString().trim();
-  if (selectedText) {
-    createPopupUI(selectedText);
-  } else {
-    // Show popup even if no selection with default message
-    createPopupUI('(No text selected yet)');
-  }
-}
-
-
-// Track URL changes for PJAX navigation and call initPopupWithSelection
 let lastUrl = location.href;
 function onUrlChange() {
   if (blobRegex.test(location.href)) {
-    initPopupWithSelection();
+    createPopupUI('(No text selected yet)');
   } else {
     removePopup();
   }
 }
-
 
 setInterval(() => {
   if (location.href !== lastUrl) {
@@ -237,14 +279,9 @@ setInterval(() => {
   }
 }, 500);
 
-
-
-
 function observePageChanges() {
-  // Observe for DOM changes that indicate PJAX navigation
   const targetNode = document.querySelector('#repo-content-pjax-container') || document.body;
   const observer = new MutationObserver(() => {
-    // Check URL change on every DOM mutation
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       onUrlChange();
@@ -253,9 +290,8 @@ function observePageChanges() {
   observer.observe(targetNode, { childList: true, subtree: true });
 }
 
-// Initial run if on a blob page
 if (blobRegex.test(location.href)) {
-  initPopupWithSelection();
+  createPopupUI('(No text selected yet)');
   observePageChanges();
 }
 

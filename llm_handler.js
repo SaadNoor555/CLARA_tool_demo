@@ -88,6 +88,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: true, result: data});
       })
       .catch(error => {
+        console.log(error.message);
         sendResponse({ success: false, error: error.message });
       });
     return true;

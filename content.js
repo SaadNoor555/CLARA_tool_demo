@@ -16,71 +16,87 @@ function extractGitHubInfo(url) {
   }
 }
 
+
+function promptBuilder(repo_info, results, context=1) {
+  const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
+  const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
+
+  const base = `In a GitHub repo titled ${repo_info['repo name']}`;
+  var ft = '';
+  if(repo_info['file tree']!=null) {
+    ft = `the following code files exist-\n\n${repo_info['file tree']}\n\n`
+  }
+  var qs = '';
+  if(context!==1) {
+    qs = `Explain the file called: "${repo_info['file name']}":\n${codeText}\n\nin context of the project in 100-120 words.\n$`
+  }
+  else {
+    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file in 100-120 words:\n${results}\n\n `
+  }
+
+  var prompt = base;
+  if(ft.length<2000) {
+    prompt += ft;
+  }
+  prompt += qs
+  // console.log(prompt);
+  return prompt;
+}
+
 function getRepoInfo() {
   return new Promise((resolve, reject) => {
-    const scriptTag = document.querySelector('script[type="application/json"][data-target="react-app.embeddedData"]');
-
     const repo_obj = {
-      'file tree': 'XXX',
+      'file tree': null,
       'file name': 'not available',
       'repo name': 'not available',
       'branch': 'not available',
       'owner': 'not available'
     };
 
-    if (scriptTag) {
-      try {
-        const currentUrl = window.location.href;
-        const dfu = extractGitHubInfo(currentUrl);
-        repo_obj['file name'] = dfu['filePath'];
-        repo_obj['repo name'] = dfu['repo'];
-        repo_obj['branch'] = dfu['branch'];
-        repo_obj['owner'] = dfu['owner'];
+    const currentUrl = window.location.href;
+    const dfu = extractGitHubInfo(currentUrl);
+    repo_obj['file name'] = dfu['filePath'];
+    repo_obj['repo name'] = dfu['repo'];
+    repo_obj['branch'] = dfu['branch'];
+    repo_obj['owner'] = dfu['owner'];
 
-        const repo_req = {
-          'owner': repo_obj['owner'],
-          'repo': repo_obj['repo name'],
-          'branch': repo_obj['branch']
-        };
+    const repo_req = {
+      'owner': repo_obj['owner'],
+      'repo': repo_obj['repo name'],
+      'branch': repo_obj['branch']
+    };
 
-        chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
-          if (chrome.runtime.lastError) {
-            repo_obj['file tree'] = 'not available because of error';
-          } else {
-            repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
-          }
-          resolve(repo_obj);
-        });
-      } catch (e) {
-        reject(e);
+    chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
+      if (chrome.runtime.lastError) {
+        repo_obj['file tree'] = null;
+      } else {
+        try {
+          repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
+        }
+        catch {
+          console.log('failed to retrieve file tree');
+          repo_obj['file tree'] = null;
+        }
       }
-    } else {
-      reject(new Error('No matching script tag found.'));
-    }
+      resolve(repo_obj);
+    });
   });
 }
 
 async function sendToDeepSeek(results, context = 1) {
-  const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
-  const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
   try {
     const repo_info = await getRepoInfo();
-    let prompt = '';
-
-    if (context !== 1) {
-      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nNow explain the following code file called: ${repo_info['file name']} in context of the project in 100-120 words-\n${codeText}`;
-    } else {
-      prompt = `In a GitHub repo titled ${repo_info['repo name']} the following code files exist-\n${repo_info['file tree']}\n\nHere is the file: ${repo_info['file name']}, and it's contents:\n${codeText}\nGiven all these, explain the following code portion which was selected from the given file: ${results} in 100-120 words-`;
-    }
+    let prompt = promptBuilder(repo_info, results, context);
 
     chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
-
+    console.log(chatHistory);
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
         if (chrome.runtime.lastError) {
           resolve(`❌ Error: ${chrome.runtime.lastError.message}`);
+          chatHistory.pop();
         } else {
-          resolve(response?.result || '❌ No response');
+          resolve(response?.result || 'an unexpected error occurred');
         }
       });
     });
@@ -141,7 +157,12 @@ function createResponsePage(responseText) {
     padding: '5px'
   });
   responseDiv.textContent = responseText;
-  chatHistory.push({ role: 'model', parts: [{ text: responseText }] });
+  if(responseText === 'an unexpected error occurred') {
+    chatHistory.pop();
+  }
+  else {
+    chatHistory.push({ role: 'model', parts: [{ text: responseText }] });
+  }
 
   const inputBox = document.createElement('textarea');
   Object.assign(inputBox.style, {
@@ -180,8 +201,15 @@ function createResponsePage(responseText) {
       chatHistory.push({ role: 'user', parts: [{ text: followUpText }] });
       console.log(chatHistory);
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        responseDiv.textContent = response?.result || '❌ No response';
-        chatHistory.push({ role: 'model', parts: [{ text: response?.result || 'sorry cannot answer right now' }] });
+        let text = response?.result || 'an unexpected error occurred';
+        responseDiv.textContent = text;
+        if(text === 'an unexpected error occurred') {
+          chatHistory.pop();
+          console.log(chatHistory);
+        }
+        else {
+          chatHistory.push({ role: 'model', parts: [{ text: response?.result || 'sorry cannot answer right now' }] });
+        }
       });
     }
   });
@@ -245,12 +273,18 @@ function createPopupUI(text) {
   });
 
   explainBtn.addEventListener('click', async (e) => {
+    explainBtn.textContent = 'Loading...';
+    explainBtn.disabled = true;
+    showCodeBtn.disabled = true;
     e.stopPropagation();
     const resultText = await sendToDeepSeek(lastSelectedText, 1);
     createResponsePage(resultText);
   });
 
   showCodeBtn.addEventListener('click', async (e) => {
+    showCodeBtn.textContent = 'Loading...';
+    explainBtn.disabled = true;
+    showCodeBtn.disabled = true;
     e.stopPropagation();
     const resultText = await sendToDeepSeek('', 0);
     createResponsePage(resultText);
@@ -266,6 +300,7 @@ const blobRegex = /^https:\/\/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/.+/;
 let lastUrl = location.href;
 function onUrlChange() {
   if (blobRegex.test(location.href)) {
+    chatHistory = [];
     createPopupUI('(No text selected yet)');
   } else {
     removePopup();

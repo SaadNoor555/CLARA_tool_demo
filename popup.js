@@ -80,9 +80,7 @@ async function getRepoInfo() {
 
 async function promptBuilder(repo_info, results, context=1) {
   const codeText = await extractCode()
-  // const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
-  // console.log(codeText);
-  // console.log(results);
+
   const base = `In a GitHub repo titled ${repo_info['repo name']}`;
   var ft = '';
   if(repo_info['file tree']!=null) {
@@ -106,23 +104,8 @@ async function promptBuilder(repo_info, results, context=1) {
 }
 
 
-// function sendToDeepSeek(results, context = "code portion") {
-//   const extracted = results?.[0]?.result ?? '';
-//   const prompt = `Explain this ${context} briefly (within 100 words):\n` + extracted;
-
-//   updateOutput('⏳ Loading...');
-
-//   chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: prompt }, (response) => {
-//     if (chrome.runtime.lastError) {
-//       updateOutput(`❌ Error: ${chrome.runtime.lastError.message}`);
-//     } else {
-//       updateOutput(response?.result || '❌ No response');
-//     }
-//   });
-// }
-
 async function sendToDeepSeek(results, context = 1) {
-  updateOutput('⏳ Loading...');
+  updateOutput('Loading...');
   try {
     const repo_info = await getRepoInfo();
     let prompt = await promptBuilder(repo_info, results, context);
@@ -132,8 +115,7 @@ async function sendToDeepSeek(results, context = 1) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
         if (chrome.runtime.lastError) {
-          updateOutput(`❌ Error: ${chrome.runtime.lastError.message}`);
-          // resolve(`❌ Error: ${chrome.runtime.lastError.message}`);
+          updateOutput(`Error: ${chrome.runtime.lastError.message}`);
           chatHistory.pop();
         } else {
           let res = response?.result || 'an unexpected error occurred'
@@ -151,7 +133,7 @@ async function sendToDeepSeek(results, context = 1) {
   } catch (err) {
     console.log(err.message)
     updateOutput('an unexpected error occurred');
-    return `❌ Failed to extract repo info: ${err.message}`;
+    return `Failed to extract repo info: ${err.message}`;
   }
 }
 
@@ -171,7 +153,7 @@ function extractSelectedText(callback) {
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => window.getSelection().toString().trim() || '❌ No text selected.'
+      func: () => window.getSelection().toString().trim() || 'No text selected.'
     }, callback);
   });
 }
@@ -183,7 +165,7 @@ function updateOutput(content) {
     if (placeholder) placeholder.remove();
     resultDiv.textContent = content;
   } else {
-    console.error('❌ Error: #output-content not found.');
+    console.error('Error: #output-content not found.');
   }
 }
 
@@ -222,18 +204,18 @@ document.getElementById('refactorCode')?.addEventListener('click', () => {
     let code = results?.[0] ?? '';
     console.log(code);
     if(code==='') {
-      updateOutput('❌ No response');
+      updateOutput('No response');
     }
     else {
       code = code.result[0];
       console.log(code);
-      const prompt = `Refactor the following code to improve readability and maintainability:\n${code}`;
+      const prompt = `Refactor the following code and give the full clean, refactored code as an output:\n${code}`;
       const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
       chatHistory.push(promptBody);
-      updateOutput('⏳ Refactoring...');
+      updateOutput('Refactoring...');
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        let res = response?.result || '❌ No response';
-        if(res==='❌ No response') {
+        let res = response?.result || 'No response';
+        if(res==='No response') {
           chatHistory.pop();
         }
         else {
@@ -250,7 +232,7 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
   extractTextareas((results) => {
     const code = results?.[0] ?? '';
     if(code==='') {
-      updateOutput('❌ No response');
+      updateOutput('No response');
     }
     else {
       code = code.result[0];
@@ -260,8 +242,8 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
       chatHistory.push(promptBody)
       updateOutput('🔐 Scanning for vulnerabilities...');
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        let res = response?.result || '❌ No response';
-        if(res==='❌ No response') {
+        let res = response?.result || 'No response';
+        if(res==='No response') {
           chatHistory.pop();
         }
         else {
@@ -277,19 +259,19 @@ document.getElementById('seeStats')?.addEventListener('click', () => {
   revealOutputCard('See Code Statistics');
   extractTextareas((results) => {
     if(code==='') {
-      updateOutput('❌ No response');
+      updateOutput('No response');
     }
     else {
       code = code.result[0];
       console.log(code);
       const code = results?.[0] ?? '';
-      const prompt = `Provide useful code statistics (like lines of code, number of functions, average function length, etc.) for the following:\n${code}`;
-      updateOutput('📊 Analyzing code...');
+      const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories of the following code:\n${code}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
+      updateOutput('Analyzing code...');
       const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
       chatHistory.push(promptBody);
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        let res = response?.result || '❌ No response';
-        if(res==='❌ No response') {
+        let res = response?.result || 'No response';
+        if(res==='No response') {
           chatHistory.pop();
         }
         else {
@@ -322,9 +304,9 @@ document.getElementById('chat-form')?.addEventListener('submit', (e) => {
   history.scrollTop = history.scrollHeight;
   chatHistory.push({ role: 'user', parts: [{ text: question }] })
   chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-    let res = response?.result || '❌ No response';
+    let res = response?.result || 'No response';
     aiMessage.textContent = res;
-    if(res==='❌ No response') {
+    if(res==='No response') {
       chatHistory.pop();
     }
     else {

@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "GitHub Blob Extractor",
+  "name": "CLARA",
   "version": "1.0",
-  "description": "Works only on GitHub file pages",
+  "description": "A Chrome-extension tool that assists developers and researchers in exploring and analyzing open-source GitHub repositories",
   "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "host_permissions": ["https://github.com/*"],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "clara.jpg"
+    }
   },
   "background": {
     "service_worker": "llm_handler.js",

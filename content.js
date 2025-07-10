@@ -11,11 +11,56 @@ function createPopupUI(text) {
 
     selectionPopup = document.createElement('div');
     selectionPopup.className = 'custom-selection-popup';
-    selectionPopup.style = 'position: fixed; top: 20px; right: 20px; background: #fff; color: #000; border: 1px solid #ddd; border-radius: 12px; padding: 15px; font-size: 13px; width: 350px; height: auto; box-shadow: 0 6px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px;';
+    selectionPopup.style = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #fff;
+      color: #000;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 13px;
+      width: 350px;
+      height: auto;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9999;
+    `;
 
     const header = document.createElement('div');
-    header.textContent = 'Code Assistant';
-    header.style = 'font-size: 16px; font-weight: bold; text-align: center;';
+    header.style = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    `;
+
+    const logo = document.createElement('img');
+    logo.src = 'clara.jpg'; 
+    logo.alt = 'CLARA';
+    logo.style = 'width: 80px; height: 80px; margin-left: auto; margin-right: auto; display: block;';
+
+    const logoContainer = document.createElement('div');
+    logoContainer.style = 'flex-grow: 1; display: flex; justify-content: center;';
+    logoContainer.appendChild(logo);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style = `
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #888;
+    `;
+    closeBtn.onclick = () => {
+      removePopup();
+    };
+
+    header.appendChild(closeBtn);
+    header.appendChild(logoContainer);
 
     const explainBtn = createStyledButton('Explain Selected Code', '#0969da');
     const showCodeBtn = createStyledButton('Explain Full Code', '#22a65b');
@@ -37,18 +82,20 @@ function createPopupUI(text) {
     };
 
     const footer = document.createElement('div');
-    footer.textContent = 'Powered by DeepSeek AI';
+    footer.textContent = 'Powered by ChatGPT 4o';
     footer.style = 'text-align: center; font-size: 11px; color: #888;';
 
     selectionPopup.append(header, explainBtn, showCodeBtn, footer);
     document.body.appendChild(selectionPopup);
+
     console.log('no problems');
   }
-  catch(err) {
+  catch (err) {
     console.log(err.message);
   }
-  console.log('this was called too')
+  console.log('this was called too');
 }
+
 
 
 function extractGitHubInfo(url) {

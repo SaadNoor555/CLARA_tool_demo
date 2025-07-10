@@ -6,45 +6,14 @@ let chatHistory = [];
 function extractGitHubInfo(url) {
   const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
   if (match) {
-    const owner = match[1];
-    const repo = match[2];
-    const branch = match[3];
-    const filePath = match[4];
+    const [_, owner, repo, branch, filePath] = match;
     return { owner, repo, branch, filePath };
-  } else {
-    return null;
   }
-}
-
-
-function promptBuilder(repo_info, results, context=1) {
-  const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
-  const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
-
-  const base = `In a GitHub repo titled ${repo_info['repo name']}`;
-  var ft = '';
-  if(repo_info['file tree']!=null) {
-    ft = `the following code files exist-\n\n${repo_info['file tree']}\n\n`
-  }
-  var qs = '';
-  if(context!==1) {
-    qs = `Explain the file called: "${repo_info['file name']}":\n${codeText}\n\nin context of the project.\n$`
-  }
-  else {
-    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file:\n${results}\n\n `
-  }
-
-  var prompt = base;
-  if(ft.length<2000) {
-    prompt += ft;
-  }
-  prompt += qs
-  // console.log(prompt);
-  return prompt;
+  return null;
 }
 
 function getRepoInfo() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const repo_obj = {
       'file tree': null,
       'file name': 'not available',
@@ -55,10 +24,12 @@ function getRepoInfo() {
 
     const currentUrl = window.location.href;
     const dfu = extractGitHubInfo(currentUrl);
-    repo_obj['file name'] = dfu['filePath'];
-    repo_obj['repo name'] = dfu['repo'];
-    repo_obj['branch'] = dfu['branch'];
-    repo_obj['owner'] = dfu['owner'];
+    if (dfu) {
+      repo_obj['file name'] = dfu.filePath;
+      repo_obj['repo name'] = dfu.repo;
+      repo_obj['branch'] = dfu.branch;
+      repo_obj['owner'] = dfu.owner;
+    }
 
     const repo_req = {
       'owner': repo_obj['owner'],
@@ -67,40 +38,54 @@ function getRepoInfo() {
     };
 
     chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
-      if (chrome.runtime.lastError) {
-        repo_obj['file tree'] = null;
-      } else {
-        try {
-          repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
-        }
-        catch {
-          console.log('failed to retrieve file tree');
-          repo_obj['file tree'] = null;
-        }
+      if (!chrome.runtime.lastError && response?.result?.tree) {
+        repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
       }
       resolve(repo_obj);
     });
   });
 }
 
+function promptBuilder(repo_info, results, context = 1) {
+  const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
+  const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
+
+  let prompt = `In a GitHub repo titled ${repo_info['repo name']}`;
+  if (repo_info['file tree'] && repo_info['file tree'].length < 2000) {
+    prompt += ` the following code files exist:\n\n${repo_info['file tree']}\n\n`;
+  }
+
+  if (context !== 1) {
+    prompt += `Explain the file called: \"${repo_info['file name']}\":\n${codeText}\n\nin context of the project.`;
+  } else {
+    prompt += `,Given below is the file named \"${repo_info['file name']}\":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file:\n${results}\n\n`;
+  }
+  return prompt;
+}
+
 async function sendToDeepSeek(results, context = 1) {
   try {
     const repo_info = await getRepoInfo();
-    let prompt = promptBuilder(repo_info, results, context);
+    const prompt = promptBuilder(repo_info, results, context);
 
     chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
-    console.log(chatHistory);
+
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
         if (chrome.runtime.lastError) {
-          resolve(`❌ Error: ${chrome.runtime.lastError.message}`);
           chatHistory.pop();
+          resolve('❌ Error: ' + chrome.runtime.lastError.message);
         } else {
-          resolve(response?.result || 'an unexpected error occurred');
+          const result = response?.result || 'an unexpected error occurred';
+          if (result !== 'an unexpected error occurred') {
+            chatHistory.push({ role: 'model', parts: [{ text: result }] });
+          } else {
+            chatHistory.pop();
+          }
+          resolve(result);
         }
       });
     });
-
   } catch (err) {
     return `❌ Failed to extract repo info: ${err.message}`;
   }
@@ -120,184 +105,132 @@ function removePopup() {
 function createResponsePage(responseText) {
   selectionPopup.innerHTML = '';
 
-  const container = document.createElement('div');
-  Object.assign(container.style, {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '400px',
-    width: '100%',
-    position: 'relative'
-  });
+  const header = document.createElement('div');
+  header.textContent = 'Code Assistant';
+  header.style = 'font-size: 16px; font-weight: bold; margin-bottom: 10px; text-align: center;';
 
-  const backButton = document.createElement('button');
-  backButton.textContent = '← Back';
-  Object.assign(backButton.style, {
-    position: 'absolute',
-    top: '10px',
-    left: '10px',
-    background: '#eee',
-    border: 'none',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px'
-  });
+  const responseContainer = document.createElement('div');
+  responseContainer.style = `
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fafafa;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    max-height: 200px;  /* Set max height for scroll */
+  `;
+  responseContainer.textContent = responseText;
 
-  backButton.addEventListener('click', () => {
-    createPopupUI(lastSelectedText);
-  });
+  const inputArea = document.createElement('textarea');
+  inputArea.placeholder = 'Ask a follow-up...';
+  inputArea.style = `
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    min-height: 50px;
+    margin-top: 10px;
+  `;
 
-  const responseDiv = document.createElement('div');
-  Object.assign(responseDiv.style, {
-    flex: '1',
-    overflowY: 'auto',
-    marginTop: '40px',
-    marginBottom: '80px',
-    whiteSpace: 'pre-wrap',
-    padding: '5px'
-  });
-  responseDiv.textContent = responseText;
-  if(responseText === 'an unexpected error occurred') {
-    chatHistory.pop();
-  }
-  else {
-    chatHistory.push({ role: 'model', parts: [{ text: responseText }] });
-  }
+  const buttonRow = document.createElement('div');
+  buttonRow.style = 'display: flex; justify-content: space-between; margin-top: 8px;';
 
-  const inputBox = document.createElement('textarea');
-  Object.assign(inputBox.style, {
-    width: 'calc(100% - 20px)',
-    padding: '6px',
-    borderRadius: '6px',
-    border: '1px solid #ccc',
-    resize: 'vertical',
-    minHeight: '50px',
-    position: 'absolute',
-    bottom: '40px',
-    left: '10px',
-  });
-  inputBox.placeholder = 'Ask a follow-up...';
+  const backButton = createStyledButton('← Back', '#ccc');
+  const followUpBtn = createStyledButton('Submit', '#444');
 
-  const followUpBtn = document.createElement('button');
-  followUpBtn.textContent = 'Submit Follow-up';
-  Object.assign(followUpBtn.style, {
-    width: 'calc(100% - 20px)',
-    padding: '8px',
-    background: '#444',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    position: 'absolute',
-    bottom: '10px',
-    left: '10px',
-    cursor: 'pointer',
-    fontSize: '13px'
-  });
-
-  followUpBtn.addEventListener('click', () => {
-    const followUpText = inputBox.value.trim();
+  backButton.onclick = () => createPopupUI(lastSelectedText);
+  followUpBtn.onclick = () => {
+    const followUpText = inputArea.value.trim();
     if (followUpText) {
-      responseDiv.textContent = '⏳ Loading...';
+      responseContainer.textContent = '⏳ Loading...';
       chatHistory.push({ role: 'user', parts: [{ text: followUpText }] });
-      console.log(chatHistory);
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        let text = response?.result || 'an unexpected error occurred';
-        responseDiv.textContent = text;
-        if(text === 'an unexpected error occurred') {
+        const text = response?.result || 'an unexpected error occurred';
+        responseContainer.textContent = text;
+        if (text !== 'an unexpected error occurred') {
+          chatHistory.push({ role: 'model', parts: [{ text }] });
+        } else {
           chatHistory.pop();
-          console.log(chatHistory);
-        }
-        else {
-          chatHistory.push({ role: 'model', parts: [{ text: response?.result || 'sorry cannot answer right now' }] });
         }
       });
     }
-  });
+  };
 
-  container.appendChild(backButton);
-  container.appendChild(responseDiv);
-  container.appendChild(inputBox);
-  container.appendChild(followUpBtn);
-  selectionPopup.appendChild(container);
+  buttonRow.append(backButton, followUpBtn);
+
+  selectionPopup.style.height = '400px';  // Fixed height for response popup
+  selectionPopup.style.display = 'flex';
+  selectionPopup.style.flexDirection = 'column';
+  selectionPopup.style.justifyContent = 'space-between';
+
+  selectionPopup.append(header, responseContainer, inputArea, buttonRow);
 }
+
 
 function createPopupUI(text) {
   removePopup();
   lastSelectedText = text;
 
   selectionPopup = document.createElement('div');
-  selectionPopup.classList.add('custom-selection-popup');
-  Object.assign(selectionPopup.style, {
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    background: '#f9f9f9',
-    color: '#000',
-    border: '1px solid #ccc',
-    borderRadius: '10px',
-    padding: '10px',
-    fontSize: '13px',
-    width: '320px',
-    height: '400px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-    zIndex: 9999,
-    overflow: 'hidden'
-  });
+  selectionPopup.className = 'custom-selection-popup';
+  selectionPopup.style = 'position: fixed; top: 20px; right: 20px; background: #fff; color: #000; border: 1px solid #ddd; border-radius: 12px; padding: 15px; font-size: 13px; width: 350px; height: auto; box-shadow: 0 6px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px;';
 
-  const explainBtn = document.createElement('button');
-  explainBtn.textContent = 'Explain Selected Code';
-  Object.assign(explainBtn.style, {
-    width: '100%',
-    padding: '8px',
-    background: '#0969da',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    marginBottom: '10px'
-  });
+  const header = document.createElement('div');
+  header.textContent = 'Code Assistant';
+  header.style = 'font-size: 16px; font-weight: bold; text-align: center;';
 
-  const showCodeBtn = document.createElement('button');
-  showCodeBtn.textContent = 'Explain Full Code';
-  Object.assign(showCodeBtn.style, {
-    width: '100%',
-    padding: '8px',
-    background: '#22a65b',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    marginBottom: '10px'
-  });
+  const explainBtn = createStyledButton('Explain Selected Code', '#0969da');
+  const showCodeBtn = createStyledButton('Explain Full Code', '#22a65b');
 
-  explainBtn.addEventListener('click', async (e) => {
+  explainBtn.onclick = async () => {
     explainBtn.textContent = 'Loading...';
     explainBtn.disabled = true;
     showCodeBtn.disabled = true;
-    e.stopPropagation();
     const resultText = await sendToDeepSeek(lastSelectedText, 1);
     createResponsePage(resultText);
-  });
+  };
 
-  showCodeBtn.addEventListener('click', async (e) => {
+  showCodeBtn.onclick = async () => {
     showCodeBtn.textContent = 'Loading...';
     explainBtn.disabled = true;
     showCodeBtn.disabled = true;
-    e.stopPropagation();
     const resultText = await sendToDeepSeek('', 0);
     createResponsePage(resultText);
-  });
+  };
 
-  selectionPopup.appendChild(explainBtn);
-  selectionPopup.appendChild(showCodeBtn);
+  const footer = document.createElement('div');
+  footer.textContent = 'Powered by DeepSeek AI';
+  footer.style = 'text-align: center; font-size: 11px; color: #888;';
+
+  selectionPopup.append(header, explainBtn, showCodeBtn, footer);
   document.body.appendChild(selectionPopup);
 }
 
-const blobRegex = /^https:\/\/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/.+/;
+function createStyledButton(text, bgColor) {
+  const button = document.createElement('button');
+  button.textContent = text;
+  button.style = `width: 100%; padding: 10px; background: ${bgColor}; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;`;
+  button.onmouseover = () => button.style.background = darkenColor(bgColor, 0.1);
+  button.onmouseout = () => button.style.background = bgColor;
+  return button;
+}
 
+function darkenColor(hex, lum) {
+  let rgb = "#", c;
+  for (let i = 1; i < 7; i++) {
+    c = parseInt(hex.substr(i,1),16);
+    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 15));
+    rgb += c.toString(16);
+  }
+  return rgb;
+}
+
+const blobRegex = /^https:\/\/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/.+/;
 let lastUrl = location.href;
+
 function onUrlChange() {
   if (blobRegex.test(location.href)) {
     chatHistory = [];

@@ -3,6 +3,54 @@ let lastSelectedText = '';
 let autoCloseTimer = null;
 let chatHistory = [];
 
+function createPopupUI(text) {
+  console.log('this was called');
+  try {
+    removePopup();
+    lastSelectedText = text;
+
+    selectionPopup = document.createElement('div');
+    selectionPopup.className = 'custom-selection-popup';
+    selectionPopup.style = 'position: fixed; top: 20px; right: 20px; background: #fff; color: #000; border: 1px solid #ddd; border-radius: 12px; padding: 15px; font-size: 13px; width: 350px; height: auto; box-shadow: 0 6px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px;';
+
+    const header = document.createElement('div');
+    header.textContent = 'Code Assistant';
+    header.style = 'font-size: 16px; font-weight: bold; text-align: center;';
+
+    const explainBtn = createStyledButton('Explain Selected Code', '#0969da');
+    const showCodeBtn = createStyledButton('Explain Full Code', '#22a65b');
+
+    explainBtn.onclick = async () => {
+      explainBtn.textContent = 'Loading...';
+      explainBtn.disabled = true;
+      showCodeBtn.disabled = true;
+      const resultText = await sendToDeepSeek(lastSelectedText, 1);
+      createResponsePage(resultText);
+    };
+
+    showCodeBtn.onclick = async () => {
+      showCodeBtn.textContent = 'Loading...';
+      explainBtn.disabled = true;
+      showCodeBtn.disabled = true;
+      const resultText = await sendToDeepSeek('', 0);
+      createResponsePage(resultText);
+    };
+
+    const footer = document.createElement('div');
+    footer.textContent = 'Powered by DeepSeek AI';
+    footer.style = 'text-align: center; font-size: 11px; color: #888;';
+
+    selectionPopup.append(header, explainBtn, showCodeBtn, footer);
+    document.body.appendChild(selectionPopup);
+    console.log('no problems');
+  }
+  catch(err) {
+    console.log(err.message);
+  }
+  console.log('this was called too')
+}
+
+
 function extractGitHubInfo(url) {
   const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
   if (match) {
@@ -102,55 +150,94 @@ function removePopup() {
   }
 }
 
-function createResponsePage(responseText) {
+function createResponsePage(initialResponseText) {
   selectionPopup.innerHTML = '';
 
   const header = document.createElement('div');
   header.textContent = 'Code Assistant';
-  header.style = 'font-size: 16px; font-weight: bold; margin-bottom: 10px; text-align: center;';
+  header.style = 'font-size: 16px; font-weight: bold; margin-bottom: 8px; text-align: center;';
 
-  const responseContainer = document.createElement('div');
-  responseContainer.style = `
-    flex: 1;
-    overflow-y: auto;
+  // Taller Initial Response Section
+  const initialResponseContainer = document.createElement('div');
+  initialResponseContainer.style = `
     padding: 10px;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 6px;
     background: #fafafa;
     margin-bottom: 10px;
     white-space: pre-wrap;
-    max-height: 200px;  /* Set max height for scroll */
+    max-height: 160px;
+    overflow-y: auto;
+    font-size: 13px;
   `;
-  responseContainer.textContent = responseText;
+  initialResponseContainer.textContent = initialResponseText;
 
+  // Enlarged Chat Area
+  const chatContainer = document.createElement('div');
+  chatContainer.style = `
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    margin-bottom: 8px;
+    max-height: 220px;
+    font-size: 13px;
+  `;
+
+  // Compact Input Area
   const inputArea = document.createElement('textarea');
   inputArea.placeholder = 'Ask a follow-up...';
   inputArea.style = `
     width: 100%;
-    padding: 8px;
-    border-radius: 6px;
+    padding: 6px;
+    border-radius: 4px;
     border: 1px solid #ccc;
     resize: vertical;
-    min-height: 50px;
-    margin-top: 10px;
+    min-height: 36px;
+    font-size: 12px;
   `;
 
   const buttonRow = document.createElement('div');
-  buttonRow.style = 'display: flex; justify-content: space-between; margin-top: 8px;';
+  buttonRow.style = 'display: flex; justify-content: space-between; margin-top: 6px;';
 
   const backButton = createStyledButton('← Back', '#ccc');
   const followUpBtn = createStyledButton('Submit', '#444');
 
-  backButton.onclick = () => createPopupUI(lastSelectedText);
+  [backButton, followUpBtn].forEach(btn => {
+    btn.style.padding = '4px 8px';
+    btn.style.fontSize = '12px';
+  });
+
+  backButton.onclick = () => {
+    selectionPopup.innerHTML = '';
+    popupVisible = false;
+    createPopupUI(lastSelectedText);
+  };
+
+
   followUpBtn.onclick = () => {
     const followUpText = inputArea.value.trim();
     if (followUpText) {
-      responseContainer.textContent = '⏳ Loading...';
+      appendChatMessage(chatContainer, 'User', followUpText);
+      inputArea.value = '';
+
+      appendChatMessage(chatContainer, 'Assistant', '⏳ Loading...');
+
       chatHistory.push({ role: 'user', parts: [{ text: followUpText }] });
+
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        const text = response?.result || 'an unexpected error occurred';
-        responseContainer.textContent = text;
-        if (text !== 'an unexpected error occurred') {
+        const text = response?.result || 'An unexpected error occurred';
+
+        const loadingMessages = chatContainer.querySelectorAll('.assistant-message');
+        if (loadingMessages.length > 0) {
+          loadingMessages[loadingMessages.length - 1].remove();
+        }
+
+        appendChatMessage(chatContainer, 'Assistant', text);
+
+        if (text !== 'An unexpected error occurred') {
           chatHistory.push({ role: 'model', parts: [{ text }] });
         } else {
           chatHistory.pop();
@@ -161,53 +248,35 @@ function createResponsePage(responseText) {
 
   buttonRow.append(backButton, followUpBtn);
 
-  selectionPopup.style.height = '400px';  // Fixed height for response popup
+  selectionPopup.style.height = '500px';  // Taller overall popup
   selectionPopup.style.display = 'flex';
   selectionPopup.style.flexDirection = 'column';
-  selectionPopup.style.justifyContent = 'space-between';
+  selectionPopup.style.padding = '8px';
 
-  selectionPopup.append(header, responseContainer, inputArea, buttonRow);
+  selectionPopup.append(header, initialResponseContainer, chatContainer, inputArea, buttonRow);
+}
+
+// Chat message appender
+function appendChatMessage(container, sender, message) {
+  const messageDiv = document.createElement('div');
+  messageDiv.style = `
+    margin-bottom: 4px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background: ${sender === 'User' ? '#e1f5fe' : '#f5f5f5'};
+    font-size: 12px;
+    white-space: pre-wrap;
+  `;
+  messageDiv.textContent = `${sender}: ${message}`;
+  messageDiv.className = sender === 'Assistant' ? 'assistant-message' : '';
+  container.appendChild(messageDiv);
+  container.scrollTop = container.scrollHeight;
 }
 
 
-function createPopupUI(text) {
-  removePopup();
-  lastSelectedText = text;
 
-  selectionPopup = document.createElement('div');
-  selectionPopup.className = 'custom-selection-popup';
-  selectionPopup.style = 'position: fixed; top: 20px; right: 20px; background: #fff; color: #000; border: 1px solid #ddd; border-radius: 12px; padding: 15px; font-size: 13px; width: 350px; height: auto; box-shadow: 0 6px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px;';
 
-  const header = document.createElement('div');
-  header.textContent = 'Code Assistant';
-  header.style = 'font-size: 16px; font-weight: bold; text-align: center;';
 
-  const explainBtn = createStyledButton('Explain Selected Code', '#0969da');
-  const showCodeBtn = createStyledButton('Explain Full Code', '#22a65b');
-
-  explainBtn.onclick = async () => {
-    explainBtn.textContent = 'Loading...';
-    explainBtn.disabled = true;
-    showCodeBtn.disabled = true;
-    const resultText = await sendToDeepSeek(lastSelectedText, 1);
-    createResponsePage(resultText);
-  };
-
-  showCodeBtn.onclick = async () => {
-    showCodeBtn.textContent = 'Loading...';
-    explainBtn.disabled = true;
-    showCodeBtn.disabled = true;
-    const resultText = await sendToDeepSeek('', 0);
-    createResponsePage(resultText);
-  };
-
-  const footer = document.createElement('div');
-  footer.textContent = 'Powered by DeepSeek AI';
-  footer.style = 'text-align: center; font-size: 11px; color: #888;';
-
-  selectionPopup.append(header, explainBtn, showCodeBtn, footer);
-  document.body.appendChild(selectionPopup);
-}
 
 function createStyledButton(text, bgColor) {
   const button = document.createElement('button');
@@ -263,7 +332,11 @@ if (blobRegex.test(location.href)) {
   observePageChanges();
 }
 
+let popupVisible = false;
+
 document.addEventListener('mouseup', (event) => {
+  if (popupVisible) return;  // Don’t trigger if popup is showing
+
   setTimeout(() => {
     const target = event.target;
     if (selectionPopup && selectionPopup.contains(target)) return;
@@ -273,9 +346,11 @@ document.addEventListener('mouseup', (event) => {
 
     if (!text) {
       removePopup();
+      popupVisible = false;
       return;
     }
 
     createPopupUI(text);
+    popupVisible = true;  // Mark popup as visible
   }, 50);
 });

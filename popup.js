@@ -200,6 +200,7 @@ function returnToHome() {
   document.getElementById('output-feature-title').textContent = '';
   document.getElementById('chat-history').innerHTML = '';
   document.getElementById('chat-input').value = '';
+  chatHistory = []
 }
 
 // Event bindings
@@ -228,9 +229,17 @@ document.getElementById('refactorCode')?.addEventListener('click', () => {
       console.log(code);
       const prompt = `Refactor the following code to improve readability and maintainability:\n${code}`;
       const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+      chatHistory.push(promptBody);
       updateOutput('⏳ Refactoring...');
-      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
-        updateOutput(response?.result || '❌ No response');
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
+        let res = response?.result || '❌ No response';
+        if(res==='❌ No response') {
+          chatHistory.pop();
+        }
+        else {
+          chatHistory.push({ role: 'model', parts: [{ text: res }] });
+        }
+        updateOutput(res);
       });
     }
   });
@@ -248,9 +257,17 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
       console.log(code);
       const prompt = `Identify and explain any potential security vulnerabilities in the following code:\n${code}`;
       const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+      chatHistory.push(promptBody)
       updateOutput('🔐 Scanning for vulnerabilities...');
-      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
-        updateOutput(response?.result || '❌ No response');
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
+        let res = response?.result || '❌ No response';
+        if(res==='❌ No response') {
+          chatHistory.pop();
+        }
+        else {
+          chatHistory.push({ role: 'model', parts: [{ text: res }] });
+        }
+        updateOutput(res);
       });
     }
   });
@@ -269,8 +286,16 @@ document.getElementById('seeStats')?.addEventListener('click', () => {
       const prompt = `Provide useful code statistics (like lines of code, number of functions, average function length, etc.) for the following:\n${code}`;
       updateOutput('📊 Analyzing code...');
       const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
-      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
-        updateOutput(response?.result || '❌ No response');
+      chatHistory.push(promptBody);
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
+        let res = response?.result || '❌ No response';
+        if(res==='❌ No response') {
+          chatHistory.pop();
+        }
+        else {
+          chatHistory.push({ role: 'model', parts: [{ text: res }] });
+        }
+        updateOutput(res);
       });
     }
   });

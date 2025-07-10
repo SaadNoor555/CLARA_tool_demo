@@ -90,10 +90,10 @@ async function promptBuilder(repo_info, results, context=1) {
   }
   var qs = '';
   if(context!==1) {
-    qs = `Explain the file called: "${repo_info['file name']}":\n${codeText}\n\nin context of the project in 100-120 words.\n$`
+    qs = `Explain the file called: "${repo_info['file name']}":\n${codeText}\n\nin context of the project.\n$`
   }
   else {
-    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file in 100-120 words:\n${results[0]['result']}\n\n `
+    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file:\n${results[0]['result']}\n\n `
   }
 
   var prompt = base;
@@ -218,13 +218,21 @@ document.getElementById('showSelection')?.addEventListener('click', () => {
 document.getElementById('refactorCode')?.addEventListener('click', () => {
   revealOutputCard('Refactor the Code');
   extractTextareas((results) => {
-    const code = results?.[0] ?? '';
-    const prompt = `Refactor the following code to improve readability and maintainability:\n${code}`;
-    const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
-    updateOutput('⏳ Refactoring...');
-    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
-      updateOutput(response?.result || '❌ No response');
-    });
+    let code = results?.[0] ?? '';
+    console.log(code);
+    if(code==='') {
+      updateOutput('❌ No response');
+    }
+    else {
+      code = code.result[0];
+      console.log(code);
+      const prompt = `Refactor the following code to improve readability and maintainability:\n${code}`;
+      const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+      updateOutput('⏳ Refactoring...');
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
+        updateOutput(response?.result || '❌ No response');
+      });
+    }
   });
 });
 
@@ -232,25 +240,39 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
   revealOutputCard('Identify Code Vulnerabilities');
   extractTextareas((results) => {
     const code = results?.[0] ?? '';
-    const prompt = `Identify and explain any potential security vulnerabilities in the following code:\n${code}`;
-    const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
-    updateOutput('🔐 Scanning for vulnerabilities...');
-    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
-      updateOutput(response?.result || '❌ No response');
-    });
+    if(code==='') {
+      updateOutput('❌ No response');
+    }
+    else {
+      code = code.result[0];
+      console.log(code);
+      const prompt = `Identify and explain any potential security vulnerabilities in the following code:\n${code}`;
+      const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+      updateOutput('🔐 Scanning for vulnerabilities...');
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
+        updateOutput(response?.result || '❌ No response');
+      });
+    }
   });
 });
 
 document.getElementById('seeStats')?.addEventListener('click', () => {
   revealOutputCard('See Code Statistics');
   extractTextareas((results) => {
-    const code = results?.[0] ?? '';
-    const prompt = `Provide useful code statistics (like lines of code, number of functions, average function length, etc.) for the following:\n${code}`;
-    updateOutput('📊 Analyzing code...');
-    const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
-    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
-      updateOutput(response?.result || '❌ No response');
-    });
+    if(code==='') {
+      updateOutput('❌ No response');
+    }
+    else {
+      code = code.result[0];
+      console.log(code);
+      const code = results?.[0] ?? '';
+      const prompt = `Provide useful code statistics (like lines of code, number of functions, average function length, etc.) for the following:\n${code}`;
+      updateOutput('📊 Analyzing code...');
+      const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: promptBody }, (response) => {
+        updateOutput(response?.result || '❌ No response');
+      });
+    }
   });
 });
 

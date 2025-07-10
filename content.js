@@ -28,10 +28,10 @@ function promptBuilder(repo_info, results, context=1) {
   }
   var qs = '';
   if(context!==1) {
-    qs = `Explain the file called: "${repo_info['file name']}":\n${codeText}\n\nin context of the project in 100-120 words.\n$`
+    qs = `Explain the file called: "${repo_info['file name']}":\n${codeText}\n\nin context of the project.\n$`
   }
   else {
-    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file in 100-120 words:\n${results}\n\n `
+    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file:\n${results}\n\n `
   }
 
   var prompt = base;

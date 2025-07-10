@@ -20,6 +20,12 @@ let gitToken = null;
 //       })
 
 
+const systemInstruction = {
+    parts: [{
+      text: "You are a CLARA. Your task is to analyze github repo's files and answer to user's queries regarding different files. You must answer briefly, preferably within 100-120 words."
+    }]
+  };
+
 const LLM_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 
 // Load token on startup
@@ -37,13 +43,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   if (message.action === "askDeepSeek") {
     // console.log("payload: ")
-    console.log(message.payload);
+    
 
     var payload = {
+      systemInstruction,
       contents: message.payload,
     };
 
-
+    console.log(payload);
     const TOKEN = apiKey; // Replace this with your actual token
 
     fetch(LLM_URL, {

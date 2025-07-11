@@ -255,33 +255,31 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
   });
 });
 
-document.getElementById('seeStats')?.addEventListener('click', () => {
+document.getElementById('seeStats')?.addEventListener('click', async () => {
   revealOutputCard('See Code Statistics');
-  extractTextareas((results) => {
-    if(code==='') {
-      updateOutput('No response');
-    }
-    else {
-      code = code.result[0];
-      console.log(code);
-      const code = results?.[0] ?? '';
-      const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories of the following code:\n${code}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
-      updateOutput('Analyzing code...');
-      const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
-      chatHistory.push(promptBody);
-      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        let res = response?.result || 'No response';
-        if(res==='No response') {
-          chatHistory.pop();
-        }
-        else {
-          chatHistory.push({ role: 'model', parts: [{ text: res }] });
-        }
-        updateOutput(res);
-      });
-    }
-  });
+  const codeText = await extractCode();
+  // extractTextareas((results) => {
+  // const code = results?.[0] ?? '';
+  if (codeText === '') {
+    updateOutput('No response');
+  } else {
+    console.log(codeText);
+    const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories by impact according to CVE of the following code:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
+    updateOutput('Analyzing code...');
+    const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+    chatHistory.push(promptBody);
+    chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
+      let res = response?.result || 'No response';
+      if(res === 'No response') {
+        chatHistory.pop();
+      } else {
+        chatHistory.push({ role: 'model', parts: [{ text: res }] });
+      }
+      updateOutput(res);
+    });
+  }
 });
+
 
 document.getElementById('chat-form')?.addEventListener('submit', (e) => {
   e.preventDefault();

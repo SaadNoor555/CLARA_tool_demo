@@ -2,8 +2,10 @@ let selectionPopup = null;
 let lastSelectedText = '';
 let autoCloseTimer = null;
 let chatHistory = [];
+let popupVisible = false;
 
 function createPopupUI(text) {
+  // popupVisible = true;
   console.log('this was called');
   try {
     removePopup();
@@ -258,6 +260,7 @@ function createResponsePage(initialResponseText) {
   });
 
   backButton.onclick = () => {
+    chatHistory = [];
     selectionPopup.innerHTML = '';
     popupVisible = false;
     createPopupUI(lastSelectedText);
@@ -351,8 +354,10 @@ function onUrlChange() {
   if (blobRegex.test(location.href)) {
     chatHistory = [];
     createPopupUI('(No text selected yet)');
+    popupVisible = true;
   } else {
     removePopup();
+    popupVisible = false;
   }
 }
 
@@ -376,14 +381,17 @@ function observePageChanges() {
 
 if (blobRegex.test(location.href)) {
   createPopupUI('(No text selected yet)');
+  popupVisible = true;
   observePageChanges();
 }
 
-let popupVisible = false;
 
 document.addEventListener('mouseup', (event) => {
-  if (popupVisible) return;  // Don’t trigger if popup is showing
-
+  if (popupVisible) {
+    console.log('fail');
+    return;
+  }  // Don’t trigger if popup is showing
+  chatHistory = [];
   setTimeout(() => {
     const target = event.target;
     if (selectionPopup && selectionPopup.contains(target)) return;

@@ -17,7 +17,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["config.json"],
+      "resources": ["config.json", "clara.jpg"],
       "matches": ["<all_urls>"]
     }
   ],

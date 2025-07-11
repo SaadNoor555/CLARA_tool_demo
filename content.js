@@ -40,7 +40,7 @@ function createPopupUI(text) {
     `;
 
     const logo = document.createElement('img');
-    logo.src = 'clara.jpg'; 
+    logo.src = chrome.runtime.getURL('clara.jpg'); 
     logo.alt = 'CLARA';
     logo.style = 'width: 80px; height: 80px; margin-left: auto; margin-right: auto; display: block;';
 

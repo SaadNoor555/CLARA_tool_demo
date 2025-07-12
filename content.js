@@ -222,7 +222,7 @@ async function sendToDeepSeek(results, context = 1) {
     }
     prompt = promptBuilder(repo_info, results, context);
 
-    chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+    chatHistory.push({ role: 'user', content: prompt});
 
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
@@ -232,7 +232,7 @@ async function sendToDeepSeek(results, context = 1) {
         } else {
           const result = response?.result || 'an unexpected error occurred';
           if (result !== 'an unexpected error occurred') {
-            chatHistory.push({ role: 'model', parts: [{ text: result }] });
+            chatHistory.push({ role: 'assistant', content: result });
           } else {
             chatHistory.pop();
           }
@@ -332,7 +332,7 @@ function createResponsePage(initialResponseText) {
 
       appendChatMessage(chatContainer, 'Assistant', '⏳ Loading...');
 
-      chatHistory.push({ role: 'user', parts: [{ text: followUpText }] });
+      chatHistory.push({ role: 'user', content: followUpText });
 
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
         const text = response?.result || 'An unexpected error occurred';
@@ -345,7 +345,7 @@ function createResponsePage(initialResponseText) {
         appendChatMessage(chatContainer, 'Assistant', text);
 
         if (text !== 'An unexpected error occurred') {
-          chatHistory.push({ role: 'model', parts: [{ text }] });
+          chatHistory.push({ role: 'assistant', content: text });
         } else {
           chatHistory.pop();
         }

@@ -19,37 +19,20 @@ repoCache.set(
   ['.circleci', '.circleci/config.yml', '.gitignore', 'README.md', 'pom.xml', 'src/main/java/com/harium/keel/catalano/math/Approximation.java', 'src/main/java/com/harium/keel/catalano/math/ComplexNumber.java', 'src/main/java/com/harium/keel/catalano/math/Constants.java', 'src/main/java/com/harium/keel/catalano/math/Matrix.java', 'src/main/java/com/harium/keel/catalano/math/Special.java', 'src/main/java/com/harium/keel/catalano/math/TaylorSeries.java', 'src/main/java/com/harium/keel/catalano/math/Tools.java', 'src/main/java/com/harium/keel/catalano/statistics/Histogram.java', 'src/main/java/com/harium/keel/catalano/statistics/HistogramStatistics.java', 'src/main/java/org/opencv/CvStatus.java', 'src/main/java/org/opencv/OpenCv.java', 'src/main/java/org/opencv/criteria/CriteriaType.java', 'src/main/java/org/opencv/criteria/CvTermCriteria.java', 'src/main/java/org/opencv/modules/calib3d/Posit.java', 'src/main/java/org/spongepowered/noise/Noise.java', 'src/main/java/org/spongepowered/noise/NoiseQuality.java', 'src/main/java/org/spongepowered/noise/Utils.java', 'src/main/java/org/spongepowered/noise/exception/NoModuleException.java', 'src/main/java/org/spongepowered/noise/exception/NoiseException.java', 'src/main/java/org/spongepowered/noise/model/Cylinder.java', 'src/main/java/org/spongepowered/noise/model/Line.java', 'src/main/java/org/spongepowered/noise/model/Plane.java', 'src/main/java/org/spongepowered/noise/model/Sphere.java', 'src/main/java/org/spongepowered/noise/module/Cache.java', 'src/main/java/org/spongepowered/noise/module/Module.java', 'src/main/java/org/spongepowered/noise/module/combiner/Add.java', 'src/main/java/org/spongepowered/noise/module/combiner/Blend.java', 'src/main/java/org/spongepowered/noise/module/combiner/Displace.java', 'src/main/java/org/spongepowered/noise/module/combiner/Max.java', 'src/main/java/org/spongepowered/noise/module/combiner/Min.java', 'src/main/java/org/spongepowered/noise/module/combiner/Multiply.java', 'src/main/java/org/spongepowered/noise/module/combiner/Power.java', 'src/main/java/org/spongepowered/noise/module/combiner/Select.java', 'src/main/java/org/spongepowered/noise/module/modifier/Abs.java', 'src/main/java/org/spongepowered/noise/module/modifier/Clamp.java', 'src/main/java/org/spongepowered/noise/module/modifier/Curve.java', 'src/main/java/org/spongepowered/noise/module/modifier/Exponent.java', 'src/main/java/org/spongepowered/noise/module/modifier/Invert.java', 'src/main/java/org/spongepowered/noise/module/modifier/Range.java', 'src/main/java/org/spongepowered/noise/module/modifier/RotatePoint.java', 'src/main/java/org/spongepowered/noise/module/modifier/ScaleBias.java', 'src/main/java/org/spongepowered/noise/module/modifier/ScalePoint.java', 'src/main/java/org/spongepowered/noise/module/modifier/Terrace.java', 'src/main/java/org/spongepowered/noise/module/modifier/TranslatePoint.java', 'src/main/java/org/spongepowered/noise/module/modifier/Turbulence.java', 'src/main/java/org/spongepowered/noise/module/source/Billow.java', 'src/main/java/org/spongepowered/noise/module/source/Checkerboard.java', 'src/main/java/org/spongepowered/noise/module/source/Const.java', 'src/main/java/org/spongepowered/noise/module/source/Cylinders.java', 'src/main/java/org/spongepowered/noise/module/source/Perlin.java', 'src/main/java/org/spongepowered/noise/module/source/RidgedMulti.java', 'src/main/java/org/spongepowered/noise/module/source/Spheres.java', 'src/main/java/org/spongepowered/noise/module/source/Voronoi.java'] 
 );
 
-// https://router.huggingface.co/fireworks-ai/inference/v1/chat/completions
-// headers: {
-//         "Authorization": `Bearer ${TOKEN}`,
-//         "Content-Type": "application/json"
-//       }
-
-// body: JSON.stringify({
-//         messages: [
-//           {
-//             role: "user",
-//             content: message.payload || "What is the capital of France?"
-//           }
-//         ],
-//         model: "accounts/fireworks/models/deepseek-r1-0528",
-//         stream: false
-//       })
-
 
 const systemInstruction = {
-    parts: [{
-      text: "You are a CLARA. Your task is to analyze github repo's files and answer to user's queries regarding different files. You must answer briefly, preferably within 100-120 words."
-    }]
-  };
+            "role": "developer",
+            "content": "You are a CLARA. Your task is to analyze github repo's files and answer to user's queries regarding different files. You must answer briefly, preferably within 100-120 words."
+        }
 
-const LLM_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+
+const LLM_URL = 'https://api.openai.com/v1/chat/completions'
 
 // Load token on startup
 fetch(chrome.runtime.getURL("config.json"))
   .then(response => response.json())
   .then(config => {
-    apiKey = config.API_KEY
+    apiKey = config.GPT_KEY
     hfToken = config.HF_TOKEN;
     gitToken = config.GIT_KEY;
     console.log("✅ Token loaded");
@@ -62,10 +45,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // console.log("payload: ")
     
 
-    var payload = {
-      systemInstruction,
-      contents: message.payload,
-    };
+    var payload = [systemInstruction];
+    payload = payload.concat(message.payload);
 
     console.log(payload);
     const TOKEN = apiKey; // Replace this with your actual token
@@ -74,14 +55,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
-        'X-goog-api-key': TOKEN,
+        'Authorization': `Bearer ${TOKEN}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: payload
+      })
     })
       .then(response => response.json())
       .then(data => {
         console.log(data);
-        sendResponse({ success: true, result: data["candidates"][0]["content"]["parts"][0]["text"] });
+        sendResponse({ success: true, result: data["choices"][0]["message"]["content"] });
       })
       .catch(error => {
         sendResponse({ success: false, error: error.message });

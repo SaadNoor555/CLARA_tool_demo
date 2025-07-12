@@ -111,7 +111,7 @@ async function sendToDeepSeek(results, context = 1) {
     const repo_info = await getRepoInfo();
     let prompt = await promptBuilder(repo_info, results, context);
     console.log(prompt)
-    chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+    chatHistory.push({ role: 'user', content: prompt });
     console.log(chatHistory);
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
@@ -125,7 +125,7 @@ async function sendToDeepSeek(results, context = 1) {
             chatHistory.pop();
           }
           else {
-            chatHistory.push({ role: 'model', parts: [{ text: res }] });
+            chatHistory.push({ role: 'assistant', content: res });
           }
         }
       });
@@ -211,7 +211,7 @@ document.getElementById('refactorCode')?.addEventListener('click', () => {
       code = code.result[0];
       console.log(code);
       const prompt = `Refactor the following code and give the full clean, refactored code as an output dont add anything else:\n${code}`;
-      const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+      const promptBody = { role: 'user', content: prompt };
       chatHistory.push(promptBody);
       updateOutput('Refactoring...');
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
@@ -220,7 +220,7 @@ document.getElementById('refactorCode')?.addEventListener('click', () => {
           chatHistory.pop();
         }
         else {
-          chatHistory.push({ role: 'model', parts: [{ text: res }] });
+          chatHistory.push({ role: 'assistant', content: res });
         }
         updateOutput(res);
       });
@@ -239,7 +239,7 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
       code = code.result[0];
       console.log(code);
       const prompt = `Identify and explain any potential security vulnerabilities in the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the numbers:\n${code}`;
-      const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+      const promptBody = { role: 'user', content: prompt };
       chatHistory.push(promptBody)
       updateOutput('🔐 Scanning for vulnerabilities...');
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
@@ -248,7 +248,7 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
           chatHistory.pop();
         }
         else {
-          chatHistory.push({ role: 'model', parts: [{ text: res }] });
+          chatHistory.push({ role: 'assistant', content: res });
         }
         updateOutput(res);
       });
@@ -267,14 +267,14 @@ document.getElementById('seeStats')?.addEventListener('click', async () => {
     console.log(codeText);
     const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories by impact according to CVE of the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the numbers:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
     updateOutput('Analyzing code...');
-    const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
+    const promptBody = { role: 'user', content: prompt };
     chatHistory.push(promptBody);
     chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
       let res = response?.result || 'No response';
       if(res === 'No response') {
         chatHistory.pop();
       } else {
-        chatHistory.push({ role: 'model', parts: [{ text: res }] });
+        chatHistory.push({ role: 'assistant', content: res });
       }
       updateOutput(res);
     });
@@ -301,7 +301,7 @@ document.getElementById('chat-form')?.addEventListener('submit', (e) => {
 
   input.value = '';
   history.scrollTop = history.scrollHeight;
-  chatHistory.push({ role: 'user', parts: [{ text: question }] })
+  chatHistory.push({ role: 'user', content: question })
   chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
     let res = response?.result || 'No response';
     aiMessage.textContent = res;
@@ -309,7 +309,7 @@ document.getElementById('chat-form')?.addEventListener('submit', (e) => {
       chatHistory.pop();
     }
     else {
-      chatHistory.push({ role: 'model', parts: [{ text: res }] })
+      chatHistory.push({ role: 'assistant', content: res })
     }
     history.scrollTop = history.scrollHeight;
   });

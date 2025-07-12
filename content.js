@@ -5,7 +5,6 @@ let chatHistory = [];
 let popupVisible = false;
 
 function createPopupUI(text) {
-  // popupVisible = true;
   console.log('this was called');
   try {
     removePopup();
@@ -69,14 +68,23 @@ function createPopupUI(text) {
     const refactorBtn = createStyledButton('Refactor Code', '#22a65b');
     const statsBtn = createStyledButton('See Code Statistics', '#22a65b');
 
+
     explainBtn.onclick = async () => {
       explainBtn.textContent = 'Loading...';
       explainBtn.disabled = true;
       showCodeBtn.disabled = true;
       refactorBtn.disabled = true;
       statsBtn.disabled = true;
-      const resultText = await sendToDeepSeek(lastSelectedText, 1);
-      createResponsePage(resultText);
+      if(lastSelectedText!==null) {
+        const resultText = await sendToDeepSeek(lastSelectedText, 1);
+        createResponsePage(resultText);
+      }
+      else {
+        explainBtn.textContent = 'Please Select Something First!';
+        showCodeBtn.disabled = false;
+        refactorBtn.disabled = false;
+        statsBtn.disabled = false;
+      }
     };
 
     showCodeBtn.onclick = async () => {
@@ -402,7 +410,7 @@ let lastUrl = location.href;
 function onUrlChange() {
   if (blobRegex.test(location.href)) {
     chatHistory = [];
-    createPopupUI('(No text selected yet)');
+    createPopupUI(null);
     popupVisible = true;
   } else {
     removePopup();
@@ -429,7 +437,7 @@ function observePageChanges() {
 }
 
 if (blobRegex.test(location.href)) {
-  createPopupUI('(No text selected yet)');
+  createPopupUI(null);
   popupVisible = true;
   observePageChanges();
 }
@@ -437,7 +445,7 @@ if (blobRegex.test(location.href)) {
 
 document.addEventListener('mouseup', (event) => {
   if (popupVisible) {
-    console.log('fail');
+    // console.log('fail');
     return;
   }  // Don’t trigger if popup is showing
   chatHistory = [];

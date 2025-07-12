@@ -67,12 +67,14 @@ function createPopupUI(text) {
     const explainBtn = createStyledButton('Explain Selected Code', '#0969da');
     const showCodeBtn = createStyledButton('Explain Full Code', '#22a65b');
     const refactorBtn = createStyledButton('Refactor Code', '#22a65b');
+    const statsBtn = createStyledButton('See Code Statistics', '#22a65b');
 
     explainBtn.onclick = async () => {
       explainBtn.textContent = 'Loading...';
       explainBtn.disabled = true;
       showCodeBtn.disabled = true;
       refactorBtn.disabled = true;
+      statsBtn.disabled = true;
       const resultText = await sendToDeepSeek(lastSelectedText, 1);
       createResponsePage(resultText);
     };
@@ -82,6 +84,7 @@ function createPopupUI(text) {
       explainBtn.disabled = true;
       showCodeBtn.disabled = true;
       refactorBtn.disabled = true;
+      statsBtn.disabled = true;
       const resultText = await sendToDeepSeek('', 0);
       createResponsePage(resultText);
     };
@@ -95,11 +98,21 @@ function createPopupUI(text) {
       createResponsePage(resultText);
     }
 
+    statsBtn.onclick = async () => {
+      statsBtn.textContent = 'Loading...';
+      explainBtn.disabled = true;
+      showCodeBtn.disabled = true;
+      refactorBtn.disabled = true;
+      statsBtn.disabled = true;
+      const resultText = await sendToDeepSeek('', 3);
+      createResponsePage(resultText);
+    }
+
     const footer = document.createElement('div');
     footer.textContent = 'Powered by ChatGPT 4o';
     footer.style = 'text-align: center; font-size: 11px; color: #888;';
 
-    selectionPopup.append(header, explainBtn, showCodeBtn, refactorBtn, footer);
+    selectionPopup.append(header, explainBtn, showCodeBtn, refactorBtn, statsBtn, footer);
     document.body.appendChild(selectionPopup);
 
     console.log('no problems');
@@ -165,11 +178,18 @@ function refactorPrompt(codeText) {
   return `Refactor the following code and give the full clean, and only the refactored code as an output:\n${codeText}`
 }
 
+function statsPrompt(codeText) {
+  return `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories by impact according to CVE of the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the numbers:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
+}
+
 function promptBuilder(repo_info, results, context = 1) {
   const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
   const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
-  if(context == 2) {
+  if(context === 2) {
     return refactorPrompt(codeText);
+  }
+  if(context === 3) {
+    return statsPrompt(codeText);
   }
   let prompt = `In a GitHub repo titled ${repo_info['repo name']}`;
   if (repo_info['file tree'] && repo_info['file tree'].length < 2000) {
@@ -189,7 +209,7 @@ async function sendToDeepSeek(results, context = 1) {
     let prompt = '';
     let repo_info = null;
 
-    if(context!==2) {
+    if(context!==2 && context!==3) {
       repo_info = await getRepoInfo();
     }
     prompt = promptBuilder(repo_info, results, context);

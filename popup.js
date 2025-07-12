@@ -66,7 +66,8 @@ async function getRepoInfo() {
         repo_obj['file tree'] = null;
       } else {
         try {
-          repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
+          repo_obj['file tree'] = response.result;
+          console.log(repo_obj['file tree'])
         }
         catch {
           console.log('failed to retrieve file tree');
@@ -237,7 +238,7 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
     else {
       code = code.result[0];
       console.log(code);
-      const prompt = `Identify and explain any potential security vulnerabilities in the following code:\n${code}`;
+      const prompt = `Identify and explain any potential security vulnerabilities in the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the numbers:\n${code}`;
       const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
       chatHistory.push(promptBody)
       updateOutput('🔐 Scanning for vulnerabilities...');
@@ -264,7 +265,7 @@ document.getElementById('seeStats')?.addEventListener('click', async () => {
     updateOutput('No response');
   } else {
     console.log(codeText);
-    const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories by impact according to CVE of the following code:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
+    const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories by impact according to CVE of the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the numbers:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
     updateOutput('Analyzing code...');
     const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
     chatHistory.push(promptBody);

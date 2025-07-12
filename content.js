@@ -135,8 +135,14 @@ function getRepoInfo() {
     };
 
     chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
-      if (!chrome.runtime.lastError && response?.result?.tree) {
-        repo_obj['file tree'] = response.result.tree.map(item => item.path).sort().join('\n');
+      if (!chrome.runtime.lastError) {
+        try {
+          repo_obj['file tree'] = response.result;
+          console.log(repo_obj['file tree']);
+        }
+        catch {
+          repo_obj['file tree'] = null;
+        }
       }
       resolve(repo_obj);
     });

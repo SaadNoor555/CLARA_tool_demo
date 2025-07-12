@@ -210,7 +210,7 @@ document.getElementById('refactorCode')?.addEventListener('click', () => {
     else {
       code = code.result[0];
       console.log(code);
-      const prompt = `Refactor the following code and give the full clean, refactored code as an output:\n${code}`;
+      const prompt = `Refactor the following code and give the full clean, refactored code as an output dont add anything else:\n${code}`;
       const promptBody = [{ role: 'user', parts: [{ text: prompt }] }];
       chatHistory.push(promptBody);
       updateOutput('Refactoring...');

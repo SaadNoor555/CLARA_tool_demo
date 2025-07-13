@@ -85,14 +85,14 @@ async function promptBuilder(repo_info, results, context=1) {
   const base = `In a GitHub repo titled ${repo_info['repo name']}`;
   var ft = '';
   if(repo_info['file tree']!=null) {
-    ft = `the following code files exist-\n\n${repo_info['file tree']}\n\n`
+    ft = `the code files' structure and their paths are as follow-\n\n${repo_info['file tree']}\n\n`
   }
   var qs = '';
   if(context!==1) {
-    qs = `Explain the file called: "${repo_info['file name']}":\n${codeText}\n\nin context of the project.\n$`
+    qs = `Explain the code file titled: "${repo_info['file name']}":\n${codeText}\n\nin context of the project repository. First in 40-50 words explain what this code file does in the context of the project repository. Then, explain what this code file does(write it in 100-120 words and write 1 small line describing each method in the code.)\n$`
   }
   else {
-    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file:\n${results[0]['result']}\n\n `
+    qs = `,Given below is the file named "${repo_info['file name']}":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file in 50-60 words:\n${results[0]['result']}\n\n `
   }
 
   var prompt = base;
@@ -106,7 +106,7 @@ async function promptBuilder(repo_info, results, context=1) {
 
 
 async function sendToDeepSeek(results, context = 1) {
-  updateOutput('Loading...');
+  updateOutput('🔎 Loading...');
   try {
     const repo_info = await getRepoInfo();
     let prompt = await promptBuilder(repo_info, results, context);
@@ -200,7 +200,7 @@ document.getElementById('showSelection')?.addEventListener('click', () => {
 });
 
 document.getElementById('refactorCode')?.addEventListener('click', () => {
-  revealOutputCard('Refactor the Code');
+  revealOutputCard('📂 Refactor the Code');
   extractTextareas((results) => {
     let code = results?.[0] ?? '';
     console.log(code);
@@ -210,7 +210,7 @@ document.getElementById('refactorCode')?.addEventListener('click', () => {
     else {
       code = code.result[0];
       console.log(code);
-      const prompt = `Refactor the following code and give the full clean, refactored code as an output dont add anything else:\n${code}`;
+      const prompt = `Refactor the following code file and provide the complete, cleaned, and refactored version as output. Include brief comments (12–15 words) next to each section where refactoring was performed, explaining the changes made. Do not include any additional explanations or descriptions, just give the refactored code as output.\n${code}`;
       const promptBody = { role: 'user', content: prompt };
       chatHistory.push(promptBody);
       updateOutput('Refactoring...');
@@ -265,8 +265,8 @@ document.getElementById('seeStats')?.addEventListener('click', async () => {
     updateOutput('No response');
   } else {
     console.log(codeText);
-    const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories by impact according to CVE of the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the numbers:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
-    updateOutput('Analyzing code...');
+    const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and identify the vulnerability categories by impact according to CVE of the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the calculated values in output. Don't give anything else.:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
+    updateOutput('💻 Analyzing code...');
     const promptBody = { role: 'user', content: prompt };
     chatHistory.push(promptBody);
     chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {

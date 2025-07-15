@@ -333,7 +333,7 @@ function createResponsePage(initialResponseText) {
     margin-bottom: 10px;
     white-space: pre-wrap;
     max-height: 700px;
-    min-height: 250px;
+    min-height: 350px;
     overflow-y: auto;
     font-size: 13px;
   `;
@@ -349,6 +349,7 @@ function createResponsePage(initialResponseText) {
     border-radius: 6px;
     background: #fff;
     margin-bottom: 8px;
+    min-height: 150px;
     max-height: 400px;
     font-size: 13px;
   `;

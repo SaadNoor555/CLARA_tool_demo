@@ -3,7 +3,7 @@
   "name": "CLARA",
   "version": "1.0",
   "description": "A Chrome-extension tool that assists developers and researchers in exploring and analyzing open-source GitHub repositories",
-  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "permissions": ["activeTab", "scripting", "tabs"],
   "host_permissions": ["https://github.com/*"],
   "action": {
     "default_popup": "popup.html",

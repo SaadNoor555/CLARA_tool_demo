@@ -319,21 +319,21 @@ function createResponsePage(initialResponseText) {
   header.style = `
     font-size: 16px;
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 0px;
     text-align: center;
   `;
 
   // Taller Initial Response Section
   const initialResponseContainer = document.createElement('div');
   initialResponseContainer.style = `
-    padding: 10px;
+    padding: 0px;
     border: 1px solid #ddd;
     border-radius: 6px;
     background: #fafafa;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
     white-space: pre-wrap;
     max-height: 700px;
-    min-height: 350px;
+    min-height: 330px;
     overflow-y: auto;
     font-size: 13px;
   `;
@@ -344,12 +344,13 @@ function createResponsePage(initialResponseText) {
   chatContainer.style = `
     flex: 1;
     overflow-y: auto;
-    padding: 6px;
+    padding: 0px;
     border: 1px solid #ddd;
     border-radius: 6px;
+    border-bottom: 2px;
     background: #fff;
-    margin-bottom: 8px;
-    min-height: 150px;
+    margin-bottom: 0px;
+    min-height: 110px;
     max-height: 400px;
     font-size: 13px;
   `;
@@ -359,24 +360,25 @@ function createResponsePage(initialResponseText) {
   inputArea.placeholder = 'Ask CLARA chatbot your questions...';
   inputArea.style = `
     width: 100%;
-    padding: 6px;
+    padding: 0px;
     border-radius: 4px;
     border: 1px solid #ccc;
     resize: vertical;
-    min-height: 60px;
+    min-height: 48px;
     font-size: 12px;
   `;
 
   const buttonRow = document.createElement('div');
-  buttonRow.style = 'display: flex; justify-content: space-between; margin-top: 6px;';
+  buttonRow.style = 'display: flex; justify-content: space-between; margin-top: 0px;';
 
   // Styled Buttons
   const backButton = createStyledButton('← Back', '#667446ff', '#000');
   const followUpBtn = createStyledButton('Ask Chatbot', '#007bff', '#fff');
 
   [backButton, followUpBtn].forEach(btn => {
-    btn.style.padding = '6px 12px';
-    btn.style.margin = '2px 2px'
+    btn.style.margin = '6px 6px'
+    btn.style.marginTop = '0px';
+    btn.style.marginBottom = '0px';
     btn.style.fontSize = '12px';
     btn.style.border = 'none';
     btn.style.borderRadius = '4px';
@@ -421,7 +423,7 @@ function createResponsePage(initialResponseText) {
 
   buttonRow.append(backButton, followUpBtn);
 
-  selectionPopup.style.height = '500px';
+  selectionPopup.style.height = '670px';
   selectionPopup.style.display = 'flex';
   selectionPopup.style.flexDirection = 'column';
   selectionPopup.style.padding = '8px';

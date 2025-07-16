@@ -4,11 +4,10 @@ let autoCloseTimer = null;
 let chatHistory = [];
 let popupVisible = false;
 
-function createPopupUI(text) {
+function createPopupUI() {
   console.log('this was called');
   try {
     removePopup();
-    lastSelectedText = text;
 
     selectionPopup = document.createElement('div');
     selectionPopup.className = 'custom-selection-popup';
@@ -81,12 +80,17 @@ function createPopupUI(text) {
       showCodeBtn.disabled = true;
       refactorBtn.disabled = true;
       statsBtn.disabled = true;
-      if(lastSelectedText!==null) {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      lastSelectedText = text;
+      console.log('text: '+text)
+      if(lastSelectedText) {
         const resultText = await sendToDeepSeek(lastSelectedText, 1);
         createResponsePage(resultText);
       }
       else {
         explainBtn.textContent = 'Please Select Something First!';
+        explainBtn.disabled = false;
         showCodeBtn.disabled = false;
         refactorBtn.disabled = false;
         statsBtn.disabled = false;
@@ -277,6 +281,8 @@ async function sendToDeepSeek(results, context = 1) {
     }
     prompt = promptBuilder(repo_info, results, context);
 
+    console.log(prompt);
+
     chatHistory.push({ role: 'user', content: prompt});
 
     return new Promise((resolve) => {
@@ -389,7 +395,7 @@ function createResponsePage(initialResponseText) {
     chatHistory = [];
     selectionPopup.innerHTML = '';
     popupVisible = false;
-    createPopupUI(lastSelectedText);
+    createPopupUI();
   };
 
   followUpBtn.onclick = () => {
@@ -494,7 +500,7 @@ let lastUrl = location.href;
 function onUrlChange() {
   if (blobRegex.test(location.href)) {
     chatHistory = [];
-    createPopupUI(null);
+    createPopupUI();
     popupVisible = true;
   } else {
     removePopup();
@@ -521,7 +527,7 @@ function observePageChanges() {
 }
 
 if (blobRegex.test(location.href)) {
-  createPopupUI(null);
+  createPopupUI();
   popupVisible = true;
   observePageChanges();
 }
@@ -546,7 +552,7 @@ document.addEventListener('mouseup', (event) => {
       return;
     }
 
-    createPopupUI(text);
+    createPopupUI();
     popupVisible = true;  // Mark popup as visible
   }, 50);
 });

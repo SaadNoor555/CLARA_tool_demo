@@ -81,17 +81,12 @@ function createPopupUI(text) {
       showCodeBtn.disabled = true;
       refactorBtn.disabled = true;
       statsBtn.disabled = true;
-      const selection = window.getSelection();
-      const text = selection.toString().trim();
-      lastSelectedText = text;
-      console.log(text)
-      if(lastSelectedText) {
+      if(lastSelectedText!==null) {
         const resultText = await sendToDeepSeek(lastSelectedText, 1);
         createResponsePage(resultText);
       }
       else {
         explainBtn.textContent = 'Please Select Something First!';
-        explainBtn.disabled = false;
         showCodeBtn.disabled = false;
         refactorBtn.disabled = false;
         statsBtn.disabled = false;
@@ -247,7 +242,7 @@ function refactorPrompt(codeText) {
 }
 
 function statsPrompt(codeText) {
-  return `Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories  among Code Execution,Denial of Service,Information Leak,Privilege Escalation,Overflow,ByPass, Memory Corruption for the following code. Just check out the codes and from the file and try to answer . just write the numbers:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation`;
+  return `CVE categories :Code Execution,Denial of Service,Information Leak,Privilege Escalation,Overflow,ByPass, Memory Corruption. Calculate the cyclomatic complexity, CVSS score, maintainability index and vulnerability categories from CVE categories for the following code. Just check out the codes and from the code try to answer . just write the numbers:\n${codeText}"\n\nIn your response only give the detected values of these attributes. Don't give any explanation`;
 }
 
 function promptBuilder(repo_info, results, context = 1) {
@@ -281,7 +276,7 @@ async function sendToDeepSeek(results, context = 1) {
       repo_info = await getRepoInfo();
     }
     prompt = promptBuilder(repo_info, results, context);
-    console.log(prompt);
+
     chatHistory.push({ role: 'user', content: prompt});
 
     return new Promise((resolve) => {
@@ -535,7 +530,6 @@ if (blobRegex.test(location.href)) {
 document.addEventListener('mouseup', (event) => {
   if (popupVisible) {
     // console.log('fail');
-    
     return;
   }  // Don’t trigger if popup is showing
   chatHistory = [];

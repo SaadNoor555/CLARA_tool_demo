@@ -20,7 +20,7 @@ CLARA can be installed as a Chrome Extension on any Chrome repository. The insta
 
 :link: [Install CLARA](https://chromewebstore.google.com/detail/clara/elidmleeoibempdgheabdhjdocppbioh)
 
----CLARA
+
 
 ## About this Repository
 
@@ -44,27 +44,11 @@ Feel free to explore these folders for a comprehensive understanding of CLARA an
 ## CLARA in Action:
 
 <p align="center">
-  <img src="assets/sprint_usage_scenario.png" alt="SPRINT UI" style="width:80%;" />
+  <img src="assets/CLARA_user.png" alt="CLARA UI" style="width:80%;" />
 </p>
 
-When a new issue is reported, CLARA fetches that issue and analyzes it. After analysis, CLARA generates comments and labels for its three features:
-
-1. *Similar Issue Detection*:  
-   CLARA generates a comment containing the list of potential similar issues' (if any) ID, title, and URL. Users can click on that URL to inspect the issues further. If one or more similar issues exist, CLARA labels the reported issue as "Duplicate".
-
-2. *Severity Prediction*:  
-   CLARA classifies the reported issue into one of five severity levels:
-   - *Blocker*: Issue stops all operations; requires immediate resolution.
-   - *Critical*: Issue causes major failure; disrupts core functionality.
-   - *Major*: Issue affects primary features but has workarounds.
-   - *Minor*: Issue impacts secondary features; low operational impact.
-   - *Trivial*: Issue has minimal or cosmetic effects only.
-
-   After classifying the severity level, CLARA creates a label of that severity and attaches it to the reported issue.
-
-3. *Bug Localization*:  
-   CLARA generates a comment containing a list of code files along with their URLs that likely require modification to solve the issues. The code file URLs can take the users to the respective code files for further inspection. 
-
+CLARA can be easily installed in any Chromium-based browser(Chrome, Brave, Edge) via its Chrome Web Store page  by clicking ‘Add to Browser’. Once installed, visiting any
+GitHub code file triggers CLARA’s pop-up at the top-right(see 1⃝ in Fig. 1).In CLARA’s popup, there are four buttons. The ”Explain Full Code File” button can give a context-aware explanation of the code file. The ”Explain Marked/Selected Code” button can help the user to understand a specific highlighted part.The ”Refactor the Code” button provides a refactored version of the source code with descriptive comments. The ’See Code Quality Attributes’ button displays quality metrics of the code file. After clicking on any of these 4 buttons, CLARA’s generated response ( 2⃝ in Fig. 1) is displayed in a module. A user can also leverage an AI-assisted chatbot ( 3⃝ in Fig. 1) while using each of CLARA’s features and ask followup questions or inquiries in a continuous conversation.
 ---
 
 ## CLARA's Architecture:

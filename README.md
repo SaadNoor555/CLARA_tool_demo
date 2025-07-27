@@ -1,75 +1,75 @@
 <p align="center">
-  <img src="assets/clara.jpg" alt="SPRINT Logo" />
+  <img src="assets/clara.jpg" alt="CLARA Logo" />
 </p>
 
-<h1 align="center">SPRINT (iSsue rePoRt assIstaNT)</h1>
+<h1 align="center">CLARA (Code expLAiner & Repo Analyzer)</h1>
 
-## What is SPRINT?
+## What is CLARA?
 
-SPRINT is an open-source GitHub application that acts as an issue management assistant for developers, project managers, computer science students, and educators. SPRINT has 3 features:
-1. Identifying similar issues  
-2. Predicting issue severity  
-3. Locating potential buggy code files  
-
----
-
-## Install SPRINT:
-
-SPRINT can be installed as a GitHub app on any GitHub repository. The installation link of SPRINT is given below, using which a user can install SPRINT on one or many repositories.
-
-:link: [Install SPRINT](https://github.com/apps/sprint-issue-report-assistant)
+CLARA is an open-source Chrome Extension that acts as a browser extension that utilizes state-of-the-art inference model to assist developers and
+researchers. CLARA has 3 features:
+1. Comprehending code files and code fragments 
+2. Code refactoring
+3. Code quality attribute detection
 
 ---
+
+## Install CLARA:
+
+CLARA can be installed as a Chrome Extension on any Chrome repository. The installation link of CLARA is given below, using which a user can install CLARA on any Chromium-based Browser.
+
+:link: [Install CLARA](https://chromewebstore.google.com/detail/clara/elidmleeoibempdgheabdhjdocppbioh)
+
+---CLARA
 
 ## About this Repository
 
-This repository hosts the code, resources, and supporting materials for the *SPRINT Tool*. It is organized into the following folders:
+This repository hosts the code, resources, and supporting materials for the *CLARA Extension*. It is organized into the following folders:
 
 ### Replication Package
-This folder contains all materials necessary to replicate the experiments, evaluations, and studies conducted for SPRINT. It is further divided into the following subfolders:
-- *Evaluation*: Includes model fine-tuning scripts, evaluation guidelines, and results for the three main features of SPRINT.
-- *SPRINT Test Cases*: Provides sample test cases to test the three features of SPRINT.
-- *User Study*: Contains the user study questionnaire and survey results related to SPRINT.
+This folder contains all materials necessary to replicate the experiments, evaluations, and studies conducted for CLARA. It is further divided into the following subfolders:
+- *Model_Evaluation*: Includes code to replicate the model evaluation result, and the author's evaluation for the LLMs for the 3 tasks of CLARA.
+- *User_Study*: Contains the user study questionnaire and survey results related to CLARA.
 
-### SPRINT Tool
-This folder contains the core codebase for the SPRINT tool. The accompanying README.md file provides detailed instructions on how to run and customize SPRINT to suit your requirements.
+### CLARA Tool
+This folder contains the core codebase for the CLARA tool. The accompanying README.md file provides detailed instructions on how to run and customize CLARA to suit your requirements.
 
 ### assets
 This folder holds images and other utility files used throughout the repository, including visuals for documentation purposes.
 
-Feel free to explore these folders for a comprehensive understanding of SPRINT and its functionality.
+Feel free to explore these folders for a comprehensive understanding of CLARA and its functionality.
 
 ---
 
-## SPRINT in Action:
+## CLARA in Action:
 
 <p align="center">
   <img src="assets/sprint_usage_scenario.png" alt="SPRINT UI" style="width:80%;" />
 </p>
 
-When a new issue is reported, SPRINT fetches that issue and analyzes it. After analysis, SPRINT generates comments and labels for its three features:
+When a new issue is reported, CLARA fetches that issue and analyzes it. After analysis, CLARA generates comments and labels for its three features:
 
 1. *Similar Issue Detection*:  
-   SPRINT generates a comment containing the list of potential similar issues' (if any) ID, title, and URL. Users can click on that URL to inspect the issues further. If one or more similar issues exist, SPRINT labels the reported issue as "Duplicate".
+   CLARA generates a comment containing the list of potential similar issues' (if any) ID, title, and URL. Users can click on that URL to inspect the issues further. If one or more similar issues exist, CLARA labels the reported issue as "Duplicate".
 
 2. *Severity Prediction*:  
-   SPRINT classifies the reported issue into one of five severity levels:
+   CLARA classifies the reported issue into one of five severity levels:
    - *Blocker*: Issue stops all operations; requires immediate resolution.
    - *Critical*: Issue causes major failure; disrupts core functionality.
    - *Major*: Issue affects primary features but has workarounds.
    - *Minor*: Issue impacts secondary features; low operational impact.
    - *Trivial*: Issue has minimal or cosmetic effects only.
 
-   After classifying the severity level, SPRINT creates a label of that severity and attaches it to the reported issue.
+   After classifying the severity level, CLARA creates a label of that severity and attaches it to the reported issue.
 
 3. *Bug Localization*:  
-   SPRINT generates a comment containing a list of code files along with their URLs that likely require modification to solve the issues. The code file URLs can take the users to the respective code files for further inspection. 
+   CLARA generates a comment containing a list of code files along with their URLs that likely require modification to solve the issues. The code file URLs can take the users to the respective code files for further inspection. 
 
 ---
 
-## SPRINT's Architecture:
+## CLARA's Architecture:
 
-SPRINT is implemented using Python's Flask framework under the following architecture:  
+CLARA is implemented using Python's Flask framework under the following architecture:  
 
 <p align="center">
   <img src="assets/architecture.png" alt="SPRINT Architecture" />
@@ -92,20 +92,20 @@ SPRINT is implemented using Python's Flask framework under the following archite
 
 6. *Other Utilities*:  
    - *Process Pool Executor*: Enables multiprocessing to analyze issues concurrently for faster processing.  
-   - *Data Storage*: SPRINT uses a local relational database to store and index issues for efficient fetching and synchronization with GitHub.  
+   - *Data Storage*: CLARA uses a local relational database to store and index issues for efficient fetching and synchronization with GitHub.  
    - *Model Library*: Leverages fine-tuned machine learning models for text analysis and predictions.  
 
 
 --- 
 
-## How can I contribute to SPRINT?
+## How can I contribute to CLARA?
 
 We are more than happy to receive your contributions (any kind of contributions). If you have an idea of a feature or enhancement, or if you find a bug, please open an issue (or a pull request). If you have questions, feel free to contact us: <a href="https://github.com/adnan23062000">Ahmed Adnan</a> (bsse1131@iit.du.ac.bd),  <a href="https://github.com/antu-saha">Antu Saha</a> (asaha02@wm.edu), and <a href="">Oscar Chaparro</a> (oscarch@wm.edu)
 
 ---
   
-## How do I customize and run SPRINT on my server?
-SPRINT is a tool for bug report duplicate detection, severity prediction and bug localization. A user can run SPRINT and customize it by following the instructions given below. We have also made our .env file public so that users can get an idea of which variable names to use and which values are required in those variables.
+## How do I customize and run CLARA on my server?
+CLARA is a tool for bug report duplicate detection, severity prediction and bug localization. A user can run CLARA and customize it by following the instructions given below. We have also made our .env file public so that users can get an idea of which variable names to use and which values are required in those variables.
 
 *Step 1:* 
 
@@ -135,7 +135,7 @@ Create a new GitHub application. You need to go to the following path:
 
    Settings -> Developer's Settings -> New GitHub App
 
-Make sure in ‘Repository Permissions’ section of the GitHub application, there is Read and Write access to ‘Actions’, ‘Webhooks’ and ‘Issues’. After saving the GitHub application, there will be an option to Generate a private access token (this token will enable permission for SPRINT to fetch and post data to a user’s Github repositories). Generate this token and then copy and paste app id, client id, and github private access token/private key to the .env file of the cloned code.
+Make sure in ‘Repository Permissions’ section of the GitHub application, there is Read and Write access to ‘Actions’, ‘Webhooks’ and ‘Issues’. After saving the GitHub application, there will be an option to Generate a private access token (this token will enable permission for CLARA to fetch and post data to a user’s Github repositories). Generate this token and then copy and paste app id, client id, and github private access token/private key to the .env file of the cloned code.
 
 
 

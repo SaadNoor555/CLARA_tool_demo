@@ -87,7 +87,7 @@ CLARA’s client design structure contains a pop-up with four buttons, represent
 
 ## How can I contribute to CLARA?
 
-We are more than happy to receive your contributions (any kind of contributions). If you have an idea of a feature or enhancement, or if you find a bug, please open an issue (or a pull request). If you have questions, feel free to contact us: <a href="https://github.com/adnan23062000">Ahmed Adnan</a> (bsse1131@iit.du.ac.bd),  <a href="https://github.com/antu-saha">Antu Saha</a> (asaha02@wm.edu), and <a href="">Oscar Chaparro</a> (oscarch@wm.edu)
+We are more than happy to receive your contributions (any kind of contributions). If you have an idea of a feature or enhancement, or if you find a bug, please open an issue (or a pull request). If you have questions, feel free to contact us: <a href="https://github.com/adnan23062000">Ahmed Adnan</a> (bsse1131@iit.du.ac.bd),   <a href="https://github.com/antu-saha">Saad Sakib Noor</a> (bsse1122@iit.du.ac.bd), <a href="https://github.com/mushfiqurgalib">Mushfiqur Rahman</a> (mushfiqur.rahman@bubt.edu.bd), and <a href="">Kazi Sakib</a> (sakib@iit.du.ac.bd)
 
 ---
   

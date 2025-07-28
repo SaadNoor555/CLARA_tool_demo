@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/clara.jpg" alt="CLARA Logo" style="width:80%"/>
+  <img src="assets/clara.jpg" alt="CLARA Logo" style="width:40% height:40%"/>
 </p>
 
 <h1 align="center">CLARA (Code expLAiner & Repo Analyzer)</h1>
@@ -122,10 +122,9 @@ We are more than happy to receive your contributions (any kind of contributions)
 ---
 ## How do I customize and run CLARA on my server?
 
-First, fork the repository and make sure you clone the forked repo, create a config.json file , and set the right environment variables This is the format of the file:
+First, fork the repository and make sure you clone the forked repo, create a config.json file, and set the right environment variables This is the format of the file:
  ```
 {
-  "HF_TOKEN": "*******",
   "API_KEY":  "*******",
   "GIT_KEY":  "*******",
   "GPT_KEY":  "*******",
@@ -138,8 +137,24 @@ Install the dependencies and run the app:
 # Install dependencies
 npm install
 
-# Run the app server
-npm start
 ```
+
+1) Open the browser and go to the extensions page:
+
+      Chrome/Brave: chrome://extensions/
+  
+      Edge: edge://extensions/
+
+2) Enable Developer Mode by toggling the switch in the top-right corner.
+
+3) Click on the Load unpacked button.
+
+4) In the file dialog, select the root directory of your cloned project.
+
+5) The extension icon should appear in the top-right corner of your browser.
+
+6) Click on the icon to open the extension’s interface, which can interact with GitHub or any relevant platform depending on the extension's functionality.
+
+
 
 

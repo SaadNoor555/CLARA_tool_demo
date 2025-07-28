@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/clara.jpg" alt="CLARA Logo" />
+  <img src="assets/clara.jpg" alt="CLARA Logo" style="width:80%"/>
 </p>
 
 <h1 align="center">CLARA (Code expLAiner & Repo Analyzer)</h1>
@@ -46,8 +46,30 @@ Feel free to explore these folders for a comprehensive understanding of CLARA an
 <p align="center">
   <img src="assets/CLARA_user.png" alt="CLARA UI" style="width:80%;" />
 </p>
-CLARA can be easily installed in any Chromium-based browser(Chrome, Brave, Edge) via its Chrome Web Store page  by clicking ‘Add to Browser’. Once installed, visiting any
-GitHub code file triggers CLARA’s pop-up at the top-right( 1 in Figure).In CLARA’s popup, there are four buttons. The ”Explain Full Code File” button can give a context-aware explanation of the code file. The ”Explain Marked/Selected Code” button can help the user to understand a specific highlighted part.The ”Refactor the Code” button provides a refactored version of the source code with descriptive comments. The ’See Code Quality Attributes’ button displays quality metrics of the code file. After clicking on any of these 4 buttons, CLARA’s generated response ( 2 in Figure) is displayed in a module. A user can also leverage an AI-assisted chatbot ( 3 in figure) while using each of CLARA’s features and ask followup questions or inquiries in a continuous conversation.
+CLARA is a browser extension that can be easily installed on any Chromium-based browser (e.g., Chrome, Brave, Edge). To install, visit the Chrome Web Store page
+and click the "Add to Browser" button.
+
+Once installed, CLARA activates automatically when visiting a GitHub code file. Upon visiting a code file, you will see a pop-up at the **top-right corner** (Figure 1).
+
+## CLARA's Features:
+
+1. **Explain Full Code File**  
+   This button provides a **context-aware explanation** of the entire code file, giving the user an overview of its functionality.
+
+2. **Explain Marked/Selected Code**  
+   When a specific portion of the code is highlighted, this button helps the user understand that particular part in more detail.
+
+3. **Refactor the Code**  
+   CLARA will generate a **refactored version of the source code**, accompanied by **descriptive comments** explaining the changes made for clarity and improvement.
+
+4. **See Code Quality Attributes**  
+   This button presents various **quality metrics** of the code file, helping users assess its structure, performance, and maintainability.
+
+
+## Interactivity with CLARA
+
+After clicking on any of the four buttons, CLARA's generated response will appear in a **module** (Figure 2). Additionally, users can interact with an **AI-assisted chatbot** (Figure 3), which is integrated with all CLARA features. This allows users to ask follow-up questions and engage in a continuous conversation for deeper insights into the code.
+
 ---
 
 ## CLARA's Architecture:
@@ -98,3 +120,26 @@ We are more than happy to receive your contributions (any kind of contributions)
    - Attach labels based on the feature's output.
 
 ---
+## How do I customize and run CLARA on my server?
+
+First, fork the repository and make sure you clone the forked repo, create a config.json file , and set the right environment variables This is the format of the file:
+ ```
+{
+  "HF_TOKEN": "*******",
+  "API_KEY":  "*******",
+  "GIT_KEY":  "*******",
+  "GPT_KEY":  "*******",
+}
+```
+
+
+Install the dependencies and run the app:
+```sh
+# Install dependencies
+npm install
+
+# Run the app server
+npm start
+```
+
+

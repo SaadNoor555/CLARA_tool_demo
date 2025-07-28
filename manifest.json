@@ -24,7 +24,7 @@
   "content_scripts": [
   {
     "matches": ["https://github.com/*"],
-    "js": ["content.js", "dataScraper.js", "refactorer.js", "qualityDetector.js", "codeExplainer.js", "llm_inference.js", "chatbotManager.js"],
+    "js": ["src/content.js", "src/dataScraper.js", "src/refactorer.js", "src/qualityDetector.js", "src/codeExplainer.js", "src/llm_inference.js", "src/chatbotManager.js"],
     "css": ["content.css"],
     "run_at": "document_idle"
   }

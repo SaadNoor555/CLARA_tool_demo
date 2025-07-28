@@ -132,7 +132,7 @@ First, fork the repository and make sure you clone the forked repo, create a con
 ```
 
 
-Install the dependencies and run the app:
+Install the dependencies:
 ```sh
 # Install dependencies
 npm install
@@ -153,7 +153,7 @@ npm install
 
 5) The extension icon should appear in the top-right corner of your browser.
 
-6) Click on the icon to open the extension’s interface, which can interact with GitHub or any relevant platform depending on the extension's functionality.
+6) Now, go to any GitHub Code file, and the extension should work.
 
 
 

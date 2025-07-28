@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/clara.jpg" alt="CLARA Logo" style="width:40% height:40%"/>
+  <img src="assets/clara.jpg" alt="CLARA Logo" style="width:40%; height:40%"/>
 </p>
 
 <h1 align="center">CLARA (Code expLAiner & Repo Analyzer)</h1>

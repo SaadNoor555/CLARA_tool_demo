@@ -153,7 +153,7 @@ npm install
 
 5) The extension icon should appear in the top-right corner of your browser.
 
-6) Now, go to any GitHub Code file, and the extension should work.
+6) Click on the icon to open the extension’s interface and go to any GitHub Code file, and the extension should work.
 
 
 

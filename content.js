@@ -1,7 +1,6 @@
 let selectionPopup = null;
 let lastSelectedText = '';
 let autoCloseTimer = null;
-let chatHistory = [];
 let popupVisible = false;
 
 function createPopupUI() {
@@ -92,63 +91,6 @@ function enableButtons(buttons) {
   });
 }
 
-function extractGitHubInfo(url) {
-  const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
-  if (match) {
-    const [_, owner, repo, branch, filePath] = match;
-    return { owner, repo, branch, filePath };
-  }
-  return null;
-}
-
-function getRepoInfo() {
-  return new Promise((resolve) => {
-    const repo_obj = {
-      'file tree': null,
-      'file name': 'not available',
-      'repo name': 'not available',
-      'branch': 'not available',
-      'owner': 'not available'
-    };
-
-    const currentUrl = window.location.href;
-    const dfu = extractGitHubInfo(currentUrl);
-    if (dfu) {
-      repo_obj['file name'] = dfu.filePath;
-      repo_obj['repo name'] = dfu.repo;
-      repo_obj['branch'] = dfu.branch;
-      repo_obj['owner'] = dfu.owner;
-    }
-
-    const repo_req = {
-      'owner': repo_obj['owner'],
-      'repo': repo_obj['repo name'],
-      'branch': repo_obj['branch']
-    };
-
-    chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
-      if (!chrome.runtime.lastError) {
-        try {
-          repo_obj['file tree'] = response.result;
-          console.log(repo_obj['file tree']);
-        }
-        catch {
-          repo_obj['file tree'] = null;
-        }
-      }
-      resolve(repo_obj);
-    });
-  });
-}
-
-
-function refactorPrompt(codeText) {
-  return `Refactor the following code file and provide the complete, cleaned, and refactored version as output. Include brief comments (12–15 words) next to each section where refactoring was performed, explaining the changes made. Do not include any additional explanations or descriptions, just give the refactored code as output.\n${codeText}`
-}
-
-function statsPrompt(codeText) {
-  return `CVE categories :Code Execution,Denial of Service,Information Leak,Privilege Escalation,Overflow,ByPass, Memory Corruption. Calculate the cyclomatic complexity, maintainability index and vulnerability category that suit most from CVE categories for the following code. Just check out the codes and from the code try to answer . just write the numbers:\n${codeText}"\n\nIn your response only give the detected values of these attributes. Don't give any explanation`;
-}
 
 function promptBuilder(repo_info, results, context = 1) {
   const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
@@ -159,53 +101,10 @@ function promptBuilder(repo_info, results, context = 1) {
   if(context === 3) {
     return statsPrompt(codeText);
   }
-  let prompt = `In a GitHub repo titled ${repo_info['repo name']}`;
-  if (repo_info['file tree'] && repo_info['file tree'].length < 2000) {
-    prompt += ` the following code files exist:\n\n${repo_info['file tree']}\n\n`;
-  }
-
-  if (context !== 1) {
-    prompt += `Explain the file called: \"${repo_info['file name']}\":\n${codeText}\n\nin context of the project repository. First in 40-50 words explain what this code file does in the context of the project repository. Then, explain what this code file does(write it in 100-120 words and write 1 small line describing each method in the code.)`;
-  } else {
-    prompt += `,Given below is the file named \"${repo_info['file name']}\":\n${codeText}\n\nWith the given information, explain the following code portion which was selected from the given file in 50-60 words:\n${results}\n\n`;
-  }
-  return prompt;
+  return explainPrompt(repo_info, results, codeText, context);
 }
 
-async function sendToDeepSeek(results, context = 1) {
-  try {
-    let prompt = '';
-    let repo_info = null;
 
-    if(context!==2 && context!==3) {
-      repo_info = await getRepoInfo();
-    }
-    prompt = promptBuilder(repo_info, results, context);
-
-    console.log(prompt);
-
-    chatHistory.push({ role: 'user', content: prompt});
-
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
-        if (chrome.runtime.lastError) {
-          chatHistory.pop();
-          resolve('❌ Error: ' + chrome.runtime.lastError.message);
-        } else {
-          const result = response?.result || 'an unexpected error occurred';
-          if (result !== 'an unexpected error occurred') {
-            chatHistory.push({ role: 'assistant', content: result });
-          } else {
-            chatHistory.pop();
-          }
-          resolve(result);
-        }
-      });
-    });
-  } catch (err) {
-    return `❌ Failed to extract repo info: ${err.message}`;
-  }
-}
 
 function removePopup() {
   if (selectionPopup) {
@@ -250,7 +149,7 @@ function createResponsePage(initialResponseText) {
   followUpBtn.className = 'back-followup-button';
 
   backButton.onclick = () => {
-    chatHistory = [];
+    clearHistory();
     selectionPopup.innerHTML = '';
     popupVisible = false;
     createPopupUI();
@@ -263,10 +162,9 @@ function createResponsePage(initialResponseText) {
       inputArea.value = '';
 
       appendChatMessage(chatContainer, 'Assistant', '⏳ Loading...');
+      pushHistory('user', followUpText);
 
-      chatHistory.push({ role: 'user', content: followUpText });
-
-      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
+      chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: getChatHistory }, (response) => {
         const text = response?.result || `An unexpected error occurred`;
 
         const loadingMessages = chatContainer.querySelectorAll('.assistant-message');
@@ -277,9 +175,9 @@ function createResponsePage(initialResponseText) {
         appendChatMessage(chatContainer, 'Assistant', text);
 
         if (text !== 'An unexpected error occurred') {
-          chatHistory.push({ role: 'assistant', content: text });
+          pushHistory('assistant', text);
         } else {
-          chatHistory.pop();
+          popHistory();
         }
       });
     }
@@ -347,7 +245,7 @@ let lastUrl = location.href;
 
 function onUrlChange() {
   if (blobRegex.test(location.href)) {
-    chatHistory = [];
+    clearHistory();
     createPopupUI();
     popupVisible = true;
   } else {
@@ -386,7 +284,7 @@ document.addEventListener('mouseup', (event) => {
     // console.log('fail');
     return;
   }  // Don’t trigger if popup is showing
-  chatHistory = [];
+  clearHistory();
   setTimeout(() => {
     const target = event.target;
     if (selectionPopup && selectionPopup.contains(target)) return;

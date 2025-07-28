@@ -1,5 +1,5 @@
 Code Explaination,
-Code ,Model's answer
+Code ,Sample answer
 "package com.harium.keel.catalano.math;
 
 
@@ -582,7 +582,7 @@ This code file offers several statistical functions to analyze a histogram's dat
 - **StdDev(int[] values):** Quantifies the amount of variation or dispersion of values relative to the mean."
 ,
 Code Refactoring,
-Code,Model Answer
+Code,Sample Answer
 "public class StatisticsUtil {
      public static List<ResultRow> executeQuery(String template, Map<String, String> params) {
          StringSubstitutor stringSubstitutor = new StringSubstitutor(params);
@@ -788,7 +788,7 @@ public static synchronized void updateConfig() {
 }"
 ,
 Code Quality Attributes,
-Code,Model Answer
+Code,Sample Answer
 "#include <stdio.h>
 #include <string.h>
 

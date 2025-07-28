@@ -5,140 +5,91 @@ let chatHistory = [];
 let popupVisible = false;
 
 function createPopupUI() {
-  console.log('this was called');
   try {
     removePopup();
 
     selectionPopup = document.createElement('div');
     selectionPopup.className = 'custom-selection-popup';
-    selectionPopup.style = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: var(--popup-bg, #fff);
-      color: var(--popup-text, #333);
-      border: 1px solid var(--popup-border, #ddd);
-      border-radius: 12px;
-      padding: 20px;
-      font-size: 14px;
-      width: 350px;
-      height: auto;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      z-index: 9999;
-      max-height: 80vh; 
-      overflow-y: auto; 
-    `;
 
     const header = document.createElement('div');
-    header.style = `
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      font-weight: bold;
-      padding-bottom: 10px;
-    `;
+    header.className = 'popup-header';
 
     const logo = document.createElement('img');
-    logo.src = chrome.runtime.getURL('clara.jpg'); 
+    logo.src = chrome.runtime.getURL('clara.jpg');
     logo.alt = 'CLARA';
-    logo.style = 'width: 80px; height: 80px; margin-left: auto; margin-right: auto; display: block;';
+    logo.className = 'popup-logo';
 
     const logoContainer = document.createElement('div');
-    logoContainer.style = 'flex-grow: 1; display: flex; justify-content: center;';
+    logoContainer.className = 'logo-container';
     logoContainer.appendChild(logo);
 
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✕';
-    closeBtn.style = `
-      background: none;
-      border: none;
-      font-size: 16px;
-      color: var(--popup-text, #333);
-      cursor: pointer;
-      padding: 5px;
-      transition: all 0.3s ease;
-      transform: translateY(-10px); /* Moves the button slightly above */
-    `;
-    closeBtn.onclick = () => {
-      removePopup();
-    };
+    closeBtn.className = 'popup-close';
+    closeBtn.onclick = removePopup;
 
     header.appendChild(closeBtn);
     header.appendChild(logoContainer);
 
-    const showCodeBtn = createStyledButton('Explain Full Code File', '#74A9F8');   
-    const explainBtn = createStyledButton('Explain Marked/Selected Code', '#3A78C2');        
-    const refactorBtn = createStyledButton('Refactor the Code', '#255BB5');           
-    const statsBtn = createStyledButton('See Code Quality Attributes', '#1A4494');      
+    const showCodeBtn = createStyledButton('Explain Full Code File', '#74A9F8');
+    const explainBtn = createStyledButton('Explain Marked/Selected Code', '#3A78C2');
+    const refactorBtn = createStyledButton('Refactor the Code', '#255BB5');
+    const statsBtn = createStyledButton('See Code Quality Attributes', '#1A4494');
 
     explainBtn.onclick = async () => {
-      explainBtn.textContent = '🔎 Loading...';
-      explainBtn.disabled = true;
-      showCodeBtn.disabled = true;
-      refactorBtn.disabled = true;
-      statsBtn.disabled = true;
-      const selection = window.getSelection();
-      const text = selection.toString().trim();
-      lastSelectedText = text;
-      console.log('text: '+text)
-      if(lastSelectedText) {
-        const resultText = await sendToDeepSeek(lastSelectedText, 1);
+      handleButtonClick(explainBtn, [showCodeBtn, refactorBtn, statsBtn], async () => {
+        const selection = window.getSelection();
+        lastSelectedText = selection.toString().trim();
+        if (lastSelectedText) {
+          const resultText = await sendToDeepSeek(lastSelectedText, 1);
+          createResponsePage(resultText);
+        } else {
+          explainBtn.textContent = 'Please Select Something First!';
+          enableButtons([explainBtn, showCodeBtn, refactorBtn, statsBtn]);
+        }
+      });
+    };
+
+    showCodeBtn.onclick = () =>
+      handleButtonClick(showCodeBtn, [explainBtn, refactorBtn, statsBtn], async () => {
+        const resultText = await sendToDeepSeek('', 0);
         createResponsePage(resultText);
-      }
-      else {
-        explainBtn.textContent = 'Please Select Something First!';
-        explainBtn.disabled = false;
-        showCodeBtn.disabled = false;
-        refactorBtn.disabled = false;
-        statsBtn.disabled = false;
-      }
-    };
+      });
 
-    showCodeBtn.onclick = async () => {
-      showCodeBtn.textContent = '🔎 Loading...';
-      explainBtn.disabled = true;
-      showCodeBtn.disabled = true;
-      refactorBtn.disabled = true;
-      statsBtn.disabled = true;
-      const resultText = await sendToDeepSeek('', 0);
-      createResponsePage(resultText);
-    };
+    refactorBtn.onclick = () =>
+      handleButtonClick(refactorBtn, [explainBtn, showCodeBtn, statsBtn], async () => {
+        const resultText = await sendToDeepSeek('', 2);
+        createResponsePage(resultText);
+      });
 
-    refactorBtn.onclick = async () => {
-      refactorBtn.textContent = '🔎 Loading...';
-      explainBtn.disabled = true;
-      showCodeBtn.disabled = true;
-      refactorBtn.disabled = true;
-      const resultText = await sendToDeepSeek('', 2);
-      createResponsePage(resultText);
-    }
-
-    statsBtn.onclick = async () => {
-      statsBtn.textContent = '🔎 Loading...';
-      explainBtn.disabled = true;
-      showCodeBtn.disabled = true;
-      refactorBtn.disabled = true;
-      statsBtn.disabled = true;
-      const resultText = await sendToDeepSeek('', 3);
-      createResponsePage(resultText);
-    }
+    statsBtn.onclick = () =>
+      handleButtonClick(statsBtn, [explainBtn, showCodeBtn, refactorBtn], async () => {
+        const resultText = await sendToDeepSeek('', 3);
+        createResponsePage(resultText);
+      });
 
     const footer = document.createElement('div');
     footer.textContent = 'Powered by ChatGPT 4o';
-    footer.style = 'text-align: center; font-size: 11px; color: #888;';
+    footer.className = 'popup-footer';
 
     selectionPopup.append(header, explainBtn, showCodeBtn, refactorBtn, statsBtn, footer);
     document.body.appendChild(selectionPopup);
+  } catch (err) {
+    console.error(err);
+  }
+}
 
-    console.log('no problems');
-  }
-  catch (err) {
-    console.log(err.message);
-  }
-  console.log('this was called too');
+function handleButtonClick(activeBtn, otherBtns, action) {
+  activeBtn.textContent = '🔎 Loading...';
+  activeBtn.disabled = true;
+  otherBtns.forEach(btn => (btn.disabled = true));
+  action();
+}
+
+function enableButtons(buttons) {
+  buttons.forEach(btn => {
+    btn.disabled = false;
+  });
 }
 
 function extractGitHubInfo(url) {
@@ -190,56 +141,6 @@ function getRepoInfo() {
   });
 }
 
-
-
-function extractGitHubInfo(url) {
-  const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
-  if (match) {
-    const [_, owner, repo, branch, filePath] = match;
-    return { owner, repo, branch, filePath };
-  }
-  return null;
-}
-
-function getRepoInfo() {
-  return new Promise((resolve) => {
-    const repo_obj = {
-      'file tree': null,
-      'file name': 'not available',
-      'repo name': 'not available',
-      'branch': 'not available',
-      'owner': 'not available'
-    };
-
-    const currentUrl = window.location.href;
-    const dfu = extractGitHubInfo(currentUrl);
-    if (dfu) {
-      repo_obj['file name'] = dfu.filePath;
-      repo_obj['repo name'] = dfu.repo;
-      repo_obj['branch'] = dfu.branch;
-      repo_obj['owner'] = dfu.owner;
-    }
-
-    const repo_req = {
-      'owner': repo_obj['owner'],
-      'repo': repo_obj['repo name'],
-      'branch': repo_obj['branch']
-    };
-
-    chrome.runtime.sendMessage({ action: 'repoTree', payload: repo_req }, (response) => {
-      if (!chrome.runtime.lastError) {
-        try {
-          repo_obj['file tree'] = response.result;
-          console.log(repo_obj['file tree']);
-        }
-        catch {
-          repo_obj['file tree'] = null;
-        }
-      }
-      resolve(repo_obj);
-    });
-  });
-}
 
 function refactorPrompt(codeText) {
   return `Refactor the following code file and provide the complete, cleaned, and refactored version as output. Include brief comments (12–15 words) next to each section where refactoring was performed, explaining the changes made. Do not include any additional explanations or descriptions, just give the refactored code as output.\n${codeText}`
@@ -322,57 +223,21 @@ function createResponsePage(initialResponseText) {
 
   const header = document.createElement('div');
   header.textContent = 'CLARA';
-  header.style = `
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 0px;
-    text-align: center;
-  `;
+  header.className = 'response-header';
 
   // Taller Initial Response Section
   const initialResponseContainer = document.createElement('div');
-  initialResponseContainer.style = `
-    padding: 0px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fafafa;
-    margin-bottom: 0px;
-    white-space: pre-wrap;
-    max-height: 700px;
-    min-height: 330px;
-    overflow-y: auto;
-    font-size: 13px;
-  `;
+  initialResponseContainer.className = 'response-container';
   initialResponseContainer.textContent = initialResponseText;
 
   // Shorter Chat Area
   const chatContainer = document.createElement('div');
-  chatContainer.style = `
-    flex: 1;
-    overflow-y: auto;
-    padding: 0px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    border-bottom: 2px;
-    background: #fff;
-    margin-bottom: 0px;
-    min-height: 110px;
-    max-height: 400px;
-    font-size: 13px;
-  `;
+  chatContainer.className = 'chat-container';
 
   // Compact Input Area
   const inputArea = document.createElement('textarea');
   inputArea.placeholder = 'Ask CLARA chatbot your questions...';
-  inputArea.style = `
-    width: 100%;
-    padding: 0px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    resize: vertical;
-    min-height: 48px;
-    font-size: 12px;
-  `;
+  inputArea.className = 'input-area';
 
   const buttonRow = document.createElement('div');
   buttonRow.style = 'display: flex; justify-content: space-between; margin-top: 0px;';
@@ -381,15 +246,8 @@ function createResponsePage(initialResponseText) {
   const backButton = createStyledButton('← Back', '#667446ff', '#000');
   const followUpBtn = createStyledButton('Ask Chatbot', '#007bff', '#fff');
 
-  [backButton, followUpBtn].forEach(btn => {
-    btn.style.margin = '6px 6px'
-    btn.style.marginTop = '0px';
-    btn.style.marginBottom = '0px';
-    btn.style.fontSize = '12px';
-    btn.style.border = 'none';
-    btn.style.borderRadius = '4px';
-    btn.style.cursor = 'pointer';
-  });
+  backButton.className = 'back-followup-button';
+  followUpBtn.className = 'back-followup-button';
 
   backButton.onclick = () => {
     chatHistory = [];
@@ -456,14 +314,7 @@ function createStyledButton(text, bgColor, textColor = '#5353d6ff') {
 // Chat message appender
 function appendChatMessage(container, sender, message) {
   const messageDiv = document.createElement('div');
-  messageDiv.style = `
-    margin-bottom: 4px;
-    padding: 5px 8px;
-    border-radius: 5px;
-    background: ${sender === 'User' ? '#e1f5fe' : '#f5f5f5'};
-    font-size: 12px;
-    white-space: pre-wrap;
-  `;
+  messageDiv.className = 'assistant-message'
   messageDiv.textContent = `${sender}: ${message}`;
   messageDiv.className = sender === 'Assistant' ? 'assistant-message' : '';
   container.appendChild(messageDiv);
@@ -471,14 +322,11 @@ function appendChatMessage(container, sender, message) {
 }
 
 
-
-
-
-
 function createStyledButton(text, bgColor) {
   const button = document.createElement('button');
   button.textContent = text;
-  button.style = `width: 100%; padding: 10px; background: ${bgColor}; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;`;
+  button.className = 'styledButton'
+  button.style = `background: ${bgColor};`;
   button.onmouseover = () => button.style.background = darkenColor(bgColor, 0.1);
   button.onmouseout = () => button.style.background = bgColor;
   return button;

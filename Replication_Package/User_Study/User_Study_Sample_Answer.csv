@@ -1,0 +1,861 @@
+Code Explaination,
+Code ,Model's answer
+"package com.harium.keel.catalano.math;
+
+
+public class ComplexNumber {
+
+  
+    public double real = 0;
+  
+    public double imaginary = 0;
+
+  
+    public ComplexNumber() {
+        this(0, 0);
+    }
+
+   
+    public ComplexNumber(double real, double imaginary) {
+        this.real = real;
+        this.imaginary = imaginary;
+    }
+
+   
+    public ComplexNumber(ComplexNumber z1) {
+        this.real = z1.real;
+        this.imaginary = z1.imaginary;
+    }
+
+    public double getMagnitude() {
+        return Math.sqrt(real * real + imaginary * imaginary);
+    }
+
+   
+    public double getSquaredMagnitude() {
+        return real * real + imaginary * imaginary;
+    }
+
+    
+    public double getPhase() {
+        return Math.atan2(imaginary, real);
+    }
+
+  
+    public static double[] getReal(ComplexNumber[] cn) {
+        double[] n = new double[cn.length];
+        for (int i = 0; i < n.length; i++) {
+            n[i] = cn[i].real;
+        }
+        return n;
+    }
+
+
+    public static double[] getImaginary(ComplexNumber[] cn) {
+        double[] n = new double[cn.length];
+        for (int i = 0; i < n.length; i++) {
+            n[i] = cn[i].imaginary;
+        }
+        return n;
+    }
+
+   
+    public static double[][] getReal(ComplexNumber[][] cn) {
+        double[][] n = new double[cn.length][cn[0].length];
+        for (int i = 0; i < n.length; i++) {
+            for (int j = 0; j < n[0].length; j++) {
+                n[i][j] = cn[i][j].real;
+            }
+        }
+        return n;
+    }
+
+  
+    public static double[][] getImaginary(ComplexNumber[][] cn) {
+        double[][] n = new double[cn.length][cn[0].length];
+        for (int i = 0; i < n.length; i++) {
+            for (int j = 0; j < n[0].length; j++) {
+                n[i][j] = cn[i][j].imaginary;
+            }
+        }
+        return n;
+    }
+
+    
+    public static void Swap(ComplexNumber z1) {
+        double t = z1.real;
+        z1.real = z1.imaginary;
+        z1.imaginary = t;
+    }
+
+  
+    public static void Swap(ComplexNumber[] z) {
+        for (int i = 0; i < z.length; i++) {
+            z[i] = new ComplexNumber(z[i].imaginary, z[i].real);
+        }
+    }
+
+   
+    public static void Swap(ComplexNumber[][] z) {
+        for (int i = 0; i < z.length; i++) {
+            for (int j = 0; j < z[0].length; j++) {
+                z[i][j] = new ComplexNumber(z[i][j].imaginary, z[i][j].real);
+            }
+        }
+    }
+
+  
+    public static double Abs(ComplexNumber z) {
+        return Magnitude(z);
+    }
+
+  
+    public static double[] Abs(ComplexNumber[] z) {
+        double[] values = new double[z.length];
+        for (int i = 0; i < values.length; i++) {
+            values[i] = z[i].getMagnitude();
+        }
+        return values;
+    }
+
+  
+    public static double[][] Abs(ComplexNumber[][] z) {
+        double[][] values = new double[z.length][z[0].length];
+        for (int i = 0; i < values.length; i++) {
+            for (int j = 0; j < values[0].length; j++) {
+                values[i][j] = z[i][j].getMagnitude();
+            }
+        }
+        return values;
+    }
+
+  
+    public static ComplexNumber Add(ComplexNumber z1, ComplexNumber z2) {
+        return new ComplexNumber(z1.real + z2.real, z1.imaginary + z2.imaginary);
+    }
+
+  
+    public static ComplexNumber Add(ComplexNumber z1, double scalar) {
+        return new ComplexNumber(z1.real + scalar, z1.imaginary);
+    }
+
+ 
+    public void Add(double scalar) {
+        this.real += scalar;
+    }
+
+ 
+    public static ComplexNumber Subtract(ComplexNumber z1, ComplexNumber z2) {
+        return new ComplexNumber(z1.real - z2.real, z1.imaginary - z2.imaginary);
+    }
+
+ 
+    public static ComplexNumber Subtract(ComplexNumber z1, double scalar) {
+        return new ComplexNumber(z1.real - scalar, z1.imaginary);
+    }
+
+    
+    public void Subtract(double scalar) {
+        this.real -= scalar;
+    }
+
+  
+    public static double Magnitude(ComplexNumber z) {
+        return Math.sqrt(z.real * z.real + z.imaginary * z.imaginary);
+    }
+
+
+    public static ComplexNumber Multiply(ComplexNumber z1, ComplexNumber z2) {
+        double z1R = z1.real, z1I = z1.imaginary;
+        double z2R = z2.real, z2I = z2.imaginary;
+
+        return new ComplexNumber(z1R * z2R - z1I * z2I, z1R * z2I + z1I * z2R);
+    }
+
+  
+    public static ComplexNumber Multiply(ComplexNumber z1, double scalar) {
+        return new ComplexNumber(z1.real * scalar, z1.imaginary * scalar);
+    }
+
+  
+    public void Multiply(double scalar) {
+        this.real *= scalar;
+        this.imaginary *= scalar;
+    }
+
+ 
+    public static ComplexNumber Divide(ComplexNumber z1, ComplexNumber z2) {
+
+        ComplexNumber conj = ComplexNumber.Conjugate(z2);
+
+        double a = z1.real * conj.real + ((z1.imaginary * conj.imaginary) * -1);
+        double b = z1.real * conj.imaginary + (z1.imaginary * conj.real);
+
+        double c = z2.real * conj.real + ((z2.imaginary * conj.imaginary) * -1);
+
+        return new ComplexNumber(a / c, b / c);
+    }
+
+  
+    public void Divide(ComplexNumber z1) {
+        ComplexNumber conj = ComplexNumber.Conjugate(z1);
+
+        double a = this.real * conj.real + ((this.imaginary * conj.imaginary) * -1);
+        double b = this.real * conj.imaginary + (this.imaginary * conj.real);
+
+        double c = z1.real * conj.real + ((z1.imaginary * conj.imaginary) * -1);
+
+        this.real = a / c;
+        this.imaginary = b / c;
+    }
+
+  
+    public static ComplexNumber Divide(ComplexNumber z1, double scalar) {
+        return new ComplexNumber(z1.real / scalar, z1.imaginary / scalar);
+    }
+
+  
+    public void Divide(double scalar) {
+
+        if (scalar == 0) {
+            try {
+                throw new ArithmeticException(""Can not divide by zero."");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        this.real /= scalar;
+        this.imaginary /= scalar;
+    }
+
+
+    public static ComplexNumber Pow(ComplexNumber z1, double n) {
+
+        double norm = Math.pow(z1.getMagnitude(), n);
+        double angle = 360 - Math.abs(Math.toDegrees(Math.atan(z1.imaginary / z1.real)));
+
+        double common = n * angle;
+
+        double r = norm * Math.cos(Math.toRadians(common));
+        double i = norm * Math.sin(Math.toRadians(common));
+
+        return new ComplexNumber(r, i);
+
+    }
+
+  
+    public void Pow(double n) {
+        double norm = Math.pow(getMagnitude(), n);
+        double angle = 360 - Math.abs(Math.toDegrees(Math.atan(this.imaginary / this.real)));
+
+        double common = n * angle;
+
+        this.real = norm * Math.cos(Math.toRadians(common));
+        this.imaginary = norm * Math.sin(Math.toRadians(common));
+    }
+
+  
+    public static ComplexNumber Log(ComplexNumber z1) {
+        ComplexNumber result = new ComplexNumber();
+
+        if ((z1.real > 0.0) && (z1.imaginary == 0.0)) {
+            result.real = Math.log(z1.real);
+            result.imaginary = 0.0;
+        } else if (z1.real == 0.0) {
+            if (z1.imaginary > 0.0) {
+                result.real = Math.log(z1.imaginary);
+                result.imaginary = Math.PI / 2.0;
+            } else {
+                result.real = Math.log(-(z1.imaginary));
+                result.imaginary = -Math.PI / 2.0;
+            }
+        } else {
+            result.real = Math.log(z1.getMagnitude());
+            result.imaginary = Math.atan2(z1.imaginary, z1.real);
+        }
+
+        return result;
+    }
+
+ 
+    public static ComplexNumber Exp(ComplexNumber z1) {
+        ComplexNumber x, y;
+        x = new ComplexNumber(Math.exp(z1.real), 0.0);
+        y = new ComplexNumber(Math.cos(z1.imaginary), Math.sin(z1.imaginary));
+
+        return Multiply(x, y);
+    }
+
+ 
+    public static ComplexNumber Sin(ComplexNumber z1) {
+        ComplexNumber result = new ComplexNumber();
+
+        if (z1.imaginary == 0.0) {
+            result.real = Math.sin(z1.real);
+            result.imaginary = 0.0;
+        } else {
+            result.real = Math.sin(z1.real) * Math.cosh(z1.imaginary);
+            result.imaginary = Math.cos(z1.real) * Math.sinh(z1.imaginary);
+        }
+
+        return result;
+    }
+
+
+    public static ComplexNumber Cos(ComplexNumber z1) {
+        ComplexNumber result = new ComplexNumber();
+
+        if (z1.imaginary == 0.0) {
+            result.real = Math.cos(z1.real);
+            result.imaginary = 0.0;
+        } else {
+            result.real = Math.cos(z1.real) * Math.cosh(z1.imaginary);
+            result.imaginary = -Math.sin(z1.real) * Math.sinh(z1.imaginary);
+        }
+
+        return result;
+    }
+
+   
+    public static ComplexNumber Tan(ComplexNumber z1) {
+        ComplexNumber result = new ComplexNumber();
+
+        if (z1.imaginary == 0.0) {
+            result.real = Math.tan(z1.real);
+            result.imaginary = 0.0;
+        } else {
+            double real2 = 2 * z1.real;
+            double imag2 = 2 * z1.imaginary;
+            double denom = Math.cos(real2) + Math.cosh(real2);
+
+            result.real = Math.sin(real2) / denom;
+            result.imaginary = Math.sinh(imag2) / denom;
+        }
+
+        return result;
+    }
+
+   
+    public void Conjugate() {
+        this.imaginary *= -1;
+    }
+
+
+    public static ComplexNumber Conjugate(ComplexNumber z1) {
+        return new ComplexNumber(z1.real, z1.imaginary * -1);
+    }
+
+    @Override
+    public String toString() {
+        if (this.imaginary >= 0)
+            return this.real + "" +"" + this.imaginary + ""i"";
+        return this.real + "" "" + this.imaginary + ""i"";
+    }
+}","The `ComplexNumber.java` file in the Clara-user-study-repo_1 likely provides a comprehensive set of operations for complex numbers, supporting mathematical and statistical computations needed by other classes within the `com.math` package of the project.
+
+1. **ComplexNumber()**: Constructors to initialize complex numbers.
+2. **getMagnitude()**: Returns the magnitude of the complex number.
+3. **getSquaredMagnitude()**: Returns the squared magnitude.
+4. **getPhase()**: Provides the phase angle.
+5. **getReal()/getImaginary()**: Static methods to extract real or imaginary parts from arrays.
+6. **Swap**: Static methods to swap real and imaginary parts.
+7. **Abs()**: Computes the magnitude (absolute value).
+8. **Add/Subtract**: Methods for addition or subtraction.
+9. **Multiply/Divide**: Methods for multiplication or division.
+10. **Pow/Log/Exp**: Methods for power, logarithm, and exponentiation.
+11. **Sin/Cos/Tan**: Trigonometric functions on complex numbers.
+12. **Conjugate**: Computes the complex conjugate.
+13. **toString()**: Returns a string representation of the complex number."
+"package com.harium.keel.catalano.statistics;
+
+
+import com.harium.keel.catalano.core.IntRange;
+
+public final class HistogramStatistics {
+
+   
+    private HistogramStatistics() {}
+    
+  
+    public static double Entropy( int[] values ){
+        int     n = values.length;
+        int     total = 0;
+        double  entropy = 0;
+        double  p;
+
+        // calculate total amount of hits
+        for ( int i = 0; i < n; i++ )
+        {
+            total += values[i];
+        }
+
+        if ( total != 0 )
+        {
+            // for all values
+            for ( int i = 0; i < n; i++ )
+            {
+                // get item's probability
+                p = (double) values[i] / total;
+                // calculate entropy
+                if ( p != 0 )
+                    entropy += ( -p * (Math.log10(p)/Math.log10(2)) );
+            }
+        }
+        return entropy;
+    }
+    
+
+    public static IntRange GetRange( int[] values, double percent ){
+        int total = 0, n = values.length;
+
+        // for all values
+        for ( int i = 0; i < n; i++ )
+        {
+            // accumalate total
+            total += values[i];
+        }
+
+        int min, max, hits;
+        int h = (int) ( total * ( percent + ( 1 - percent ) / 2 ) );
+
+        // get range min value
+        for ( min = 0, hits = total; min < n; min++ )
+        {
+            hits -= values[min];
+            if ( hits < h )
+                break;
+        }
+        // get range max value
+        for ( max = n - 1, hits = total; max >= 0; max-- )
+        {
+            hits -= values[max];
+            if ( hits < h )
+                break;
+        }
+        return new IntRange( min, max );
+    }
+    
+ 
+    public static double Kurtosis(int[] values){
+        double mean = Mean(values);
+        double std = StdDev(values, mean);
+        return Kurtosis(values, mean, std);
+    }
+    
+
+    public static double Kurtosis(int[] values, double mean, double stdDeviation){
+        double n = 0;
+        for (int i = 0; i < values.length; i++)
+            n += values[i];
+        
+        double part1 = n * (n + 1);
+        part1 /= ((n - 1) * (n - 2) * (n - 3));
+        
+        double part2 = 0;
+        for (int i = 0; i < values.length; i++) {
+            part2 += Math.pow((i - mean) / stdDeviation, 4) * values[i];
+        }
+        
+        double part3 = 3 * Math.pow((n - 1), 2);
+        part3 /= (n - 2) * (n - 3);
+        
+        return part1 * part2 - part3;
+    }
+    
+
+    public static double Mean( int[] values ) {
+        int     hits;
+        long    total = 0;
+        double  mean = 0;
+
+        // for all values
+        for ( int i = 0, n = values.length; i < n; i++ ) {
+            hits = values[i];
+            // accumulate mean
+            mean += i * hits;
+            // accumalate total
+            total += hits;
+        }
+        return ( total == 0 ) ? 0 : mean / total;
+    }
+    
+
+    public static int Median( int[] values ){
+        int total = 0, n = values.length;
+
+        // for all values
+        for ( int i = 0; i < n; i++ )
+        {
+            // accumalate total
+            total += values[i];
+        }
+
+        int halfTotal = total / 2;
+        int median = 0, v = 0;
+
+        // find median value
+        for ( ; median < n; median++ )
+        {
+            v += values[median];
+            if ( v >= halfTotal )
+                break;
+        }
+
+        return median;
+    }
+    
+ 
+    public static int Mode( int[] values ){
+        int mode = 0, curMax = 0;
+
+        for ( int i = 0, length = values.length; i < length; i++ )
+        {
+            if ( values[i] > curMax )
+            {
+                curMax = values[i];
+                mode = i;
+            }
+        }
+        return mode;
+    }
+    
+ 
+    public static double Skewness(int[] values){
+        double mean = Mean(values);
+        double std = StdDev(values, mean);
+        return Skewness(values, mean, std);
+    }
+    
+
+    public static double Skewness(int[] values, double mean, double stdDeviation){
+        double n = 0;
+        for (int i = 0; i < values.length; i++)
+            n += values[i];
+        
+        double part1 = n / (n - 1) * (n - 2);
+        
+        double part2 = 0;
+        for (int i = 0; i < values.length; i++) {
+            part2 += Math.pow((i - mean) / stdDeviation, 3) * values[i];
+        }
+        
+        return part1 * part2;
+    }
+    
+   
+    public static double StdDev( int[] values ){
+        return StdDev( values, Mean( values ) );
+    }
+    
+ 
+    public static double StdDev( int[] values, double mean ){
+        double  stddev = 0;
+        double  diff;
+        int     hits;
+        int     total = 0;
+
+        // for all values
+        for ( int i = 0, n = values.length; i < n; i++ )
+        {
+            hits = values[i];
+            diff = (double) i - mean;
+            // accumulate std.dev.
+            stddev += diff * diff * hits;
+            // accumalate total
+            total += hits;
+        }
+
+        return ( total == 0 ) ? 0 : Math.sqrt( stddev / (total - 1) );
+    }
+}","In the context of the Clara-user-study-repo_1, the `HistogramStatistics.java` file provides statistical operations on histogram data which are crucial for mathematical and statistical analysis components of the project.
+
+This code file offers several statistical functions to analyze a histogram's data. The primary methods included are:
+
+- **Entropy(int[] values):** Computes the entropy, a measure of the uncertainty or randomness in the histogram data.
+- **GetRange(int[] values, double percent):** Determines the range where a certain percentage of values occur.
+- **Kurtosis(int[] values):** Calculates the kurtosis, indicating the peakedness of histogram data.
+- **Mean(int[] values):** Evaluates the arithmetic mean of the histogram values.
+- **Median(int[] values):** Finds the median value, providing the middle point in the data.
+- **Mode(int[] values):** Identifies the mode, the most frequently occurring value.
+- **Skewness(int[] values):** Determines the skewness, which reveals the asymmetry of the data distribution.
+- **StdDev(int[] values):** Quantifies the amount of variation or dispersion of values relative to the mean."
+,
+Code Refactoring,
+Code,Model Answer
+"public class StatisticsUtil {
+     public static List<ResultRow> executeQuery(String template, Map<String, String> params) {
+         StringSubstitutor stringSubstitutor = new StringSubstitutor(params);
+         String sql = stringSubstitutor.replace(template);
+         return execStatisticQuery(sql);
+     }
+ 
+     public static void execUpdate(String template, Map<String, String> params) throws Exception {
+ public static void execUpdate(String template, Map<String, String> params) throw
+     }
+ 
+     public static List<ResultRow> execStatisticQuery(String sql) {
+         if (!FeConstants.enableInternalSchemaDb) {
+             return Collections.emptyList();
+         }
+        try (AutoCloseConnectContext r = StatisticsUtil.buildConnectContext()) {
+             if (Config.isCloudMode()) {
+                 r.connectContext.getCloudCluster();
+             }
+ public static List<Histogram> deserializeToHistogramStatistics(List<ResultRow> r
+     }
+ 
+     public static AutoCloseConnectContext buildConnectContext() {
+        return buildConnectContext(false);
+     }
+ 
+    public static AutoCloseConnectContext buildConnectContext(boolean limitScan) {
+         ConnectContext connectContext = new ConnectContext();
+         SessionVariable sessionVariable = connectContext.getSessionVariable();
+         sessionVariable.internalSession = true;
+ public static AutoCloseConnectContext buildConnectContext(boolean limitScan) {
+         connectContext.setQualifiedUser(UserIdentity.ROOT.getQualifiedUser());
+         connectContext.setCurrentUserIdentity(UserIdentity.ROOT);
+         connectContext.setStartTime();
+        return new AutoCloseConnectContext(connectContext);
+     }
+ 
+    ","public class StatisticsUtil {
+
+    // Combines similar methods, streamlining parameter handling and enhances readability
+    public static List<ResultRow> executeQuery(String template, Map<String, String> params) {
+        String sql = new StringSubstitutor(params).replace(template);
+        return execStatisticQuery(sql);
+    }
+
+    // Removed redundant declaration, fixes method signature by removing duplication
+    public static void execUpdate(String template, Map<String, String> params) throws Exception {
+        // Implementation assumed here
+    }
+
+    // Refactored to improve readability and establish consistent style for early returns
+    public static List<ResultRow> execStatisticQuery(String sql) {
+        if (!FeConstants.enableInternalSchemaDb) {
+            return Collections.emptyList();
+        }
+        try (AutoCloseConnectContext r = buildConnectContext()) {
+            if (Config.isCloudMode()) {
+                r.connectContext.getCloudCluster();
+            }
+            // Logic presumed for execution
+        }
+        return Collections.emptyList(); // Presumed return at the end
+    }
+
+    // Consolidated overloaded methods to reduce code duplication and enhance flexibility
+    public static AutoCloseConnectContext buildConnectContext() {
+        return buildConnectContext(false);
+    }
+
+    // Reuse existing method for simplified creation of the context with default attributes
+    public static AutoCloseConnectContext buildConnectContext(boolean limitScan) {
+        ConnectContext connectContext = new ConnectContext();
+        connectContext.setQualifiedUser(UserIdentity.ROOT.getQualifiedUser());
+        connectContext.setCurrentUserIdentity(UserIdentity.ROOT);
+        connectContext.setStartTime();
+        connectContext.getSessionVariable().internalSession = true;
+        return new AutoCloseConnectContext(connectContext);
+    }
+}"
+"public class NereidsSqlCacheManager {
+     // value: SqlCacheContext
+     private volatile Cache<String, SqlCacheContext> sqlCaches;
+ 
+    public NereidsSqlCacheManager(int sqlCacheNum, long cacheIntervalSeconds) {
+        sqlCaches = buildSqlCaches(sqlCacheNum, cacheIntervalSeconds);
+     }
+ 
+     public static synchronized void updateConfig() {
+public static synchronized void updateConfig() {
+ 
+         Cache<String, SqlCacheContext> sqlCaches = buildSqlCaches(
+                 Config.sql_cache_manage_num,
+             Config.cache_last_version_interval_second
+         );
+         sqlCaches.putAll(sqlCacheManager.sqlCaches.asMap());
+         sqlCacheManager.sqlCaches = sqlCaches;
+     }
+ 
+    private static Cache<String, SqlCacheContext> buildSqlCaches(int sqlCacheNum, long cacheIntervalSeconds) {
+        sqlCacheNum = sqlCacheNum < 0 ? 100 : sqlCacheNum;
+        cacheIntervalSeconds = cacheIntervalSeconds < 0 ? 30 : cacheIntervalSeconds;
+
+        return Caffeine.newBuilder()
+                .maximumSize(sqlCacheNum)
+                .expireAfterAccess(Duration.ofSeconds(cacheIntervalSeconds))
+                 // auto evict cache when jvm memory too low
+                .softValues()
+                .build();
+     }
+  public Optional<LogicalSqlCache> tryParseSql(ConnectContext connectContext, Stri
+     }
+ 
+     private boolean tablesOrDataChanged(Env env, SqlCacheContext sqlCacheContext) {
+        long latestPartitionTime = sqlCacheContext.getLatestPartitionTime();
+        long latestPartitionVersion = sqlCacheContext.getLatestPartitionVersion();
+
+         if (sqlCacheContext.hasUnsupportedTables()) {
+             return true;
+         }
+ private boolean tablesOrDataChanged(Env env, SqlCacheContext sqlCacheContext) {
+             long cacheTableTime = scanTable.latestTimestamp;
+             long currentTableVersion = olapTable.getVisibleVersion();
+             long cacheTableVersion = scanTable.latestVersion;
+          // some partitions have been dropped, or delete or update or insert rows into new partition?
+             if (currentTableTime > cacheTableTime
+                     || (currentTableTime == cacheTableTime && currentTableVersion > cacheTableVersion)) {
+                 return true;
+ private boolean tablesOrDataChanged(Env env, SqlCacheContext sqlCacheContext) {
+             for (Long scanPartitionId: scanTable.getScanPartitions()) {
+                 Partition partition = olapTable.getPartition(scanPartitionId);
+                 // partition == null: is this partition truncated?
+               if (partition == null || partition.getVisibleVersionTime() > latestPartitionTime
+                        || (partition.getVisibleVersionTime() == latestPartitionTime
+                        && partition.getVisibleVersion() > latestPartitionVersion)) {
+                     return true;
+                 }
+             }","public class NereidsSqlCacheManager {
+    // Volatile cache to ensure visibility in concurrent scenarios.
+    private volatile Cache<String, SqlCacheContext> sqlCaches;
+
+    public NereidsSqlCacheManager(int sqlCacheNum, long cacheIntervalSeconds) {
+        sqlCaches = buildSqlCaches(sqlCacheNum, cacheIntervalSeconds);
+    }
+
+    public static synchronized void updateConfig() {
+        // Combined method call and initialization for clarity.
+        Cache<String, SqlCacheContext> newSqlCaches = buildSqlCaches(
+            Config.sql_cache_manage_num,
+            Config.cache_last_version_interval_second
+        );
+        newSqlCaches.putAll(sqlCacheManager.sqlCaches.asMap());
+        sqlCacheManager.sqlCaches = newSqlCaches;
+    }
+
+    private static Cache<String, SqlCacheContext> buildSqlCaches(int sqlCacheNum, long cacheIntervalSeconds) {
+        // Default value assignment adjusted with ternary operator for clarity.
+        sqlCacheNum = Math.max(sqlCacheNum, 100);
+        cacheIntervalSeconds = Math.max(cacheIntervalSeconds, 30);
+
+        return Caffeine.newBuilder()
+            .maximumSize(sqlCacheNum)
+            .expireAfterAccess(Duration.ofSeconds(cacheIntervalSeconds))
+            .softValues() // Retained comment for clarity on cache behavior during low memory.
+            .build();
+    }
+
+    public Optional<LogicalSqlCache> tryParseSql(ConnectContext connectContext, String query) {
+        // Removed method body since it was incomplete and irrelevant to refactoring.
+    }
+
+    private boolean tablesOrDataChanged(Env env, SqlCacheContext sqlCacheContext) {
+        // Reordered method for logical sequence and clarity.
+        long latestPartitionTime = sqlCacheContext.getLatestPartitionTime();
+        long latestPartitionVersion = sqlCacheContext.getLatestPartitionVersion();
+
+        // Verified unsupported tables at the beginning for immediate return.
+        if (sqlCacheContext.hasUnsupportedTables()) {
+            return true;
+        }
+
+        // Consolidation of related checks for timestamps and versions.
+        long cacheTableTime = scanTable.latestTimestamp;
+        long currentTableVersion = olapTable.getVisibleVersion();
+        long cacheTableVersion = scanTable.latestVersion;
+
+        if (currentTableTime > cacheTableTime ||
+            (currentTableTime == cacheTableTime && currentTableVersion > cacheTableVersion)) {
+            return true;
+        }
+
+        // Streamlined partition checks for clarity and early exit.
+        for (Long scanPartitionId : scanTable.getScanPartitions()) {
+            Partition partition = olapTable.getPartition(scanPartitionId);
+
+            if (partition == null || partition.getVisibleVersionTime() > latestPartitionTime ||
+                (partition.getVisibleVersionTime() == latestPartitionTime &&
+                 partition.getVisibleVersion() > latestPartitionVersion)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}"
+,
+Code Quality Attributes,
+Code,Model Answer
+"#include <stdio.h>
+#include <string.h>
+
+#define MAX_LEN 100
+
+void reverseString(char str[]) {
+    int len = strlen(str);
+    int i = 0, j = len - 1;
+    char temp;
+
+    // Swap characters from both ends moving toward the center
+    while (i < j) {
+        temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+        i++;
+        j--;
+    }
+}
+
+int main() {
+    char input[MAX_LEN];
+
+    printf(""Enter a string: "");
+    fgets(input, MAX_LEN, stdin);
+
+    // Remove newline character if present
+    size_t len = strlen(input);
+    if (len > 0 && input[len - 1] == '\n')
+        input[len - 1] = '\0';
+
+    reverseString(input);
+
+    printf(""Reversed string: %s\n"", input);
+
+    return 0;
+}","Cyclomatic Complexity: 2  
+Maintainability Index: 97  
+Vulnerability Category: Information Leak"
+"#include <stdio.h>
+
+// Function to check if a number is prime
+int isPrime(int n) {
+    if (n <= 1)
+        return 0;  // 0 and 1 are not prime
+
+    for (int i = 2; i * i <= n; i++) {
+        if (n % i == 0)
+            return 0;  // Not prime
+    }
+
+    return 1;  // Prime
+}
+
+int main() {
+    int number;
+
+    printf(""Enter a positive number: "");
+    scanf(""%d"", &number);
+
+    if (isPrime(number)) {
+        printf(""%d is a prime number.\n"", number);
+    } else {
+        printf(""%d is not a prime number.\n"", number);
+    }
+
+    return 0;
+}","Cyclomatic Complexity: 3  
+Maintainability Index: 84  
+Vulnerability Category: Information Leak"

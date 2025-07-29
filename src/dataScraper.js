@@ -36,7 +36,6 @@ function getRepoInfo() {
       if (!chrome.runtime.lastError) {
         try {
           repo_obj['file tree'] = response.result;
-          console.log(repo_obj['file tree']);
         }
         catch {
           repo_obj['file tree'] = null;

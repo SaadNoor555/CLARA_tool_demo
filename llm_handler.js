@@ -18,7 +18,6 @@ const configLoaded = new Promise((resolve, reject) => {
       apiKey = config.GPT_KEY;
       gitToken = config.GIT_KEY;
       systemInstruction.content = config.SYSTEM_PROMPT;
-      console.log("✅ Token loaded");
       resolve();
     })
     .catch(err => {
@@ -40,7 +39,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function handleMessage(message, sender, sendResponse) {
   if (message.action === "askDeepSeek") {
     const payload = [systemInstruction, ...message.payload];
-    console.log(payload);
 
     if (!apiKey) {
       console.warn("🚫 API key missing");
@@ -61,7 +59,6 @@ function handleMessage(message, sender, sendResponse) {
     })
       .then(response => response.json())
       .then(data => {
-        console.log(data);
         const content = data?.choices?.[0]?.message?.content || 'No response';
         sendResponse({ success: true, result: content });
       })

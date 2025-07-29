@@ -14,7 +14,7 @@ function createPopupUI() {
     header.className = 'popup-header';
 
     const logo = document.createElement('img');
-    logo.src = chrome.runtime.getURL('clara.jpg');
+    logo.src = chrome.runtime.getURL('assets/clara.jpg');
     logo.alt = 'CLARA';
     logo.className = 'popup-logo';
 
@@ -281,7 +281,7 @@ if (blobRegex.test(location.href)) {
 
 document.addEventListener('mouseup', (event) => {
   if (popupVisible) {
-    // console.log('fail');
+    //  ;
     return;
   }  // Don’t trigger if popup is showing
   clearHistory();

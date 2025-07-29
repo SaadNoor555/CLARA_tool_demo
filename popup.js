@@ -1,9 +1,7 @@
 chatHistory = []
 
 function extractGitHubInfo(url) {
-  console.log(url);
   const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
-  console.log(match);
   if (match) {
     const owner = match[1];
     const repo = match[2];
@@ -32,7 +30,6 @@ async function extractCode() {
       return Array.from(textareas).map(el => el.value.trim());
     }
   });
-  console.log(injectionResult.result[0]);
   return injectionResult.result[0];
 }
 
@@ -49,7 +46,6 @@ async function getRepoInfo() {
     };
 
     const dfu = extractGitHubInfo(currentUrl);
-    console.log(dfu);
     repo_obj['file name'] = dfu['filePath'];
     repo_obj['repo name'] = dfu['repo'];
     repo_obj['branch'] = dfu['branch'];
@@ -67,10 +63,8 @@ async function getRepoInfo() {
       } else {
         try {
           repo_obj['file tree'] = response.result;
-          console.log(repo_obj['file tree'])
         }
         catch {
-          console.log('failed to retrieve file tree');
           repo_obj['file tree'] = null;
         }
       }
@@ -100,7 +94,7 @@ async function promptBuilder(repo_info, results, context=1) {
     prompt += ft;
   }
   prompt += qs
-  // console.log(prompt);
+  //  ;
   return prompt;
 }
 
@@ -110,9 +104,8 @@ async function sendToDeepSeek(results, context = 1) {
   try {
     const repo_info = await getRepoInfo();
     let prompt = await promptBuilder(repo_info, results, context);
-    console.log(prompt)
+     
     chatHistory.push({ role: 'user', content: prompt });
-    console.log(chatHistory);
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'askDeepSeek', payload: chatHistory }, (response) => {
         if (chrome.runtime.lastError) {
@@ -132,7 +125,7 @@ async function sendToDeepSeek(results, context = 1) {
     });
 
   } catch (err) {
-    console.log(err.message)
+     
     updateOutput('an unexpected error occurred');
     return `Failed to extract repo info: ${err.message}`;
   }
@@ -203,13 +196,11 @@ document.getElementById('refactorCode')?.addEventListener('click', () => {
   revealOutputCard('📂 Refactor the Code');
   extractTextareas((results) => {
     let code = results?.[0] ?? '';
-    console.log(code);
     if(code==='') {
       updateOutput('No response');
     }
     else {
       code = code.result[0];
-      console.log(code);
       const prompt = `Refactor the following code file and provide the complete, cleaned, and refactored version as output. Include brief comments (12–15 words) next to each section where refactoring was performed, explaining the changes made. Do not include any additional explanations or descriptions, just give the refactored code as output.\n${code}`;
       const promptBody = { role: 'user', content: prompt };
       chatHistory.push(promptBody);
@@ -237,7 +228,6 @@ document.getElementById('identifyVulns')?.addEventListener('click', () => {
     }
     else {
       code = code.result[0];
-      console.log(code);
       const prompt = `Identify and explain any potential security vulnerabilities in the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the numbers:\n${code}`;
       const promptBody = { role: 'user', content: prompt };
       chatHistory.push(promptBody)
@@ -264,7 +254,6 @@ document.getElementById('seeStats')?.addEventListener('click', async () => {
   if (codeText === '') {
     updateOutput('No response');
   } else {
-    console.log(codeText);
     const prompt = `Calculate the cyclomatic complexity, CVSS score, maintainability index and identify the vulnerability categories by impact according to CVE of the following code. Just check out the codes and from the code try to answer if there is any specific security vulnerability (CVE code). just write the calculated values in output. Don't give anything else.:\n${codeText}\n\nIn your response only give the detected values of these attributes. Don't give any explanation.`;
     updateOutput('💻 Analyzing code...');
     const promptBody = { role: 'user', content: prompt };

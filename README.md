@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/clara.jpg" alt="CLARA Logo" style="width:40%; height:40%"/>
+  <img src="clara_tool/assets/clara.jpg" alt="CLARA Logo" style="width:40%; height:40%"/>
 </p>
 
 <h1 align="center">CLARA (Code expLAiner & Repo Analyzer)</h1>
@@ -44,7 +44,7 @@ Feel free to explore these folders for a comprehensive understanding of CLARA an
 ## CLARA in Action:
 
 <p align="center">
-  <img src="assets/CLARA_user.png" alt="CLARA UI" style="width:80%;" />
+  <img src="clara_tool/assets/CLARA_user.png" alt="CLARA UI" style="width:80%;" />
 </p>
 CLARA is a browser extension that can be easily installed on any Chromium-based browser (e.g., Chrome, Brave, Edge). To install, visit the Chrome Web Store page
 and click the "Add to Browser" button.
@@ -77,7 +77,7 @@ After clicking on any of the four buttons, CLARA's generated response will appea
 CLARA is implemented using Python with the following architecture:  
 
 <p align="center">
-  <img src="assets/Clara_archi.png" alt="CLARA Architecture" />
+  <img src="clara_tool/assets/Clara_archi.png" alt="CLARA Architecture" />
 </p>
 
 

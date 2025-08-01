@@ -141,17 +141,16 @@ npm install
 
 1) Open the browser and go to the extensions page:
 
-      Chrome/Brave: chrome://extensions/
-  
-      Edge: edge://extensions/
+     **Chrome/Brave: chrome://extensions/**  
+     **Edge: edge://extensions/**
 
-2) Enable Developer Mode by toggling the switch in the top-right corner.
+2) **Enable Developer Mode** by toggling the switch in the top-right corner.
 
-3) Click on the Load unpacked button.
+3) Click on the **Load unpacked** button.
 
 4) In the file dialog, select the root directory of your cloned project.
 
-5) The extension icon should appear in the top-right corner of your browser.
+5) The **Extension Icon** should appear in the top-right corner of your browser.
 
 6) Click on the icon to open the extension’s interface and go to any GitHub Code file, and the extension should work.
 

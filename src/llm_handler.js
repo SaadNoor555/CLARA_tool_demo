@@ -10,7 +10,6 @@ const systemInstruction = {
 
 const LLM_URL = 'https://api.openai.com/v1/chat/completions';
 
-// ✅ Promise to ensure config is loaded before handling messages
 const configLoaded = new Promise((resolve, reject) => {
   fetch(chrome.runtime.getURL('config.json'))
     .then(response => response.json())
@@ -26,16 +25,14 @@ const configLoaded = new Promise((resolve, reject) => {
     });
 });
 
-// ✅ Message listener waits for config to be loaded
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   configLoaded
     .then(() => handleMessage(message, sender, sendResponse))
     .catch(err => sendResponse({ success: false, error: 'Failed to load API keys' }));
 
-  return true; // keep channel open for async `sendResponse`
+  return true; 
 });
 
-// ✅ Message handler
 function handleMessage(message, sender, sendResponse) {
   if (message.action === "askDeepSeek") {
     const payload = [systemInstruction, ...message.payload];

@@ -6,13 +6,13 @@
   "permissions": ["activeTab", "scripting", "tabs"],
   "host_permissions": ["https://github.com/*"],
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "src/popup.html",
     "default_icon": {
       "16": "assets/clara.jpg"
     }
   },
   "background": {
-    "service_worker": "llm_handler.js",
+    "service_worker": "src/llm_handler.js",
     "type": "module"
   },
   "web_accessible_resources": [
@@ -25,7 +25,7 @@
   {
     "matches": ["https://github.com/*"],
     "js": ["src/content.js", "src/dataScraper.js", "src/refactorer.js", "src/qualityDetector.js", "src/codeExplainer.js", "src/llm_inference.js", "src/chatbotManager.js"],
-    "css": ["content.css"],
+    "css": ["src/content.css"],
     "run_at": "document_idle"
   }
 ]

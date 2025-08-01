@@ -120,6 +120,39 @@ We are more than happy to receive your contributions (any kind of contributions)
    - Attach labels based on the feature's output.
 
 ---
+
+## 📁 Project Structure
+```
+CLARA_tool_demo/
+├── Replication_Package/ # Replication Package directory
+│ ├── Model_Evaluation # Model Evaluation directory
+│     ├── ASE Tool Model Evaluation Dataset.xlsx # Dataset for model evaluation
+│     ├── LLM_Code_Analyzer.ipynb # Handles model's response
+│     ├── README.md # Directory's Documentation
+│
+| ├── User_Study/ # User Study directory
+│     ├── CLARA Tool Demo'25 (Responses).csv # User's Responses Datasheet
+|     ├── CLARA Tool Demo'25 Questions.pdf # Question set for response
+|     ├── User_Study_Sample_Answer.csv     # Sample answer provided
+│     ├── README.md # Directory's Documentation
+│
+├── clara_tool/ # Store codebase for the CLARA tool
+| ├── assets/ # Holds images and other utility files used throughout the repository
+| ├──src/ #Source_code
+|    ├── chatbotManager.js # To manage the Chatbot
+|    ├── codeExplainer.js # Handles the code explainer part
+|    ├── content.css # CSS file to style the tool
+|    ├── content.js # Handles the tool
+|    ├── llm_handler.js # Handles the LLM response
+|    ├── llm_inference.js # Handles the repo information
+|    ├── popup.html # Handles the popup
+|    ├── popup.js # Handles functionalities for the popup
+|    ├── qualityDetector.js # Handles Code Quality part
+|    ├── refactore.js # Handles Code Refactoring part
+|    ├── style.css # styles the popup
+│
+└── README.md # Project documentation
+```
 ## How do I customize and run CLARA on my server?
 
 First, fork the repository and make sure you clone the forked repo, create a config.json file, and set the right environment variables This is the format of the file:

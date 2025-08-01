@@ -96,7 +96,7 @@ function promptBuilder(repo_info, results, context = 1) {
   const textareas = Array.from(document.querySelectorAll('#read-only-cursor-text-area'));
   const codeText = textareas.map(t => t.value || t.textContent || '').join('\n\n---\n\n').trim();
   if(context === 2) {
-    return refactorPrompt(codeText);
+    return refactorPrompt(repo_info, codeText);
   }
   if(context === 3) {
     return statsPrompt(codeText);

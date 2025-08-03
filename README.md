@@ -155,7 +155,7 @@ CLARA_tool_demo/
 ```
 ## How do I customize and run CLARA on my server?
 
-First, fork the repository and make sure you clone the forked repo, create a config.json file, and set the right environment variables This is the format of the file:
+First, fork the repository and make sure you clone the forked repo, create a **config.json** file, and set the right environment variables. This is the format of the file:
  ```
 {
   "API_KEY":  "*******",
@@ -181,11 +181,11 @@ npm install
 
 3) Click on the **Load unpacked** button.
 
-4) In the file dialog, select the root directory of your cloned project.
+4) In the file dialog, select the **clara_tool** directory of your cloned project.
 
 5) The **Extension Icon** should appear in the top-right corner of your browser.
 
-6) Click on the icon to open the extension’s interface and go to any GitHub Code file, and the extension should work.
+6) After this, **CLARA's** popup should appear whenever you visit any code file in a GitHub repository.
 
 
 
